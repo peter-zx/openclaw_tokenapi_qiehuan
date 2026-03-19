@@ -3,6 +3,8 @@ cd /d "%~dp0"
 chcp 65001 >nul
 title OpenClaw Model Switcher
 
+set PROJECT_DIR=%~dp0openclaw-manager
+
 echo.
 echo ========================================
 echo   OpenClaw Model Switcher
@@ -21,15 +23,15 @@ echo  [OK] Python detected
 
 echo.
 echo  [Step 2/5] Setting up virtual environment...
-if not exist "venv\Scripts\python.exe" (
+if not exist "%PROJECT_DIR%\venv\Scripts\python.exe" (
     echo  [INFO] Creating venv...
-    python -m venv venv
+    python -m venv "%PROJECT_DIR%\venv"
 )
 echo  [OK] Virtual environment ready
 
 echo.
 echo  [Step 3/5] Activating virtual environment...
-call venv\Scripts\activate.bat
+call "%PROJECT_DIR%\venv\Scripts\activate.bat"
 echo  [OK] Virtual environment activated
 
 echo.
@@ -37,7 +39,7 @@ echo  [Step 4/5] Checking dependencies...
 pip show fastapi >nul 2>&1
 if errorlevel 1 (
     echo  [INFO] Installing dependencies...
-    pip install -r backend\requirements.txt
+    pip install -r "%PROJECT_DIR%\backend\requirements.txt"
 )
 echo  [OK] Dependencies ready
 
@@ -45,7 +47,7 @@ echo.
 echo  [Step 5/5] Starting service...
 echo.
 
-if not exist "backend\main.py" (
+if not exist "%PROJECT_DIR%\backend\main.py" (
     echo  [ERROR] backend\main.py not found
     pause
     exit /b 1
@@ -63,4 +65,4 @@ echo   Press CTRL+C to stop
 echo ========================================
 echo.
 
-"venv\Scripts\python.exe" "backend\main.py"
+"%PROJECT_DIR%\venv\Scripts\python.exe" "%PROJECT_DIR%\backend\main.py"

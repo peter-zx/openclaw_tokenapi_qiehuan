@@ -454,7 +454,7 @@ onMounted(() => { loadConfig() })
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; }
 #app { min-height: 100vh; }
 
-.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%) !important; color: white !important; padding: 20px 40px !important; min-height: 120px !important; height: auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important; }
+.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%) !important; color: white !important; padding: 20px 40px !important; min-height: 300px !important; height: auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important; }
 .header-left { display: flex; align-items: center; gap: 15px; flex: 1; }
 .header-qrcode { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: white; }
 .header-info { display: flex; flex-direction: column; gap: 5px; }
