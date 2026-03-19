@@ -2,15 +2,18 @@
   <div id="app">
     <el-container>
       <el-header>
-        <div class="header-content">
-          <div class="header-top">
-            <h1>OpenClaw 模型切换工具</h1>
+        <div class="header-left">
+          <img :src="qrcodeImage" alt="QR Code" class="header-qrcode">
+          <div class="header-info">
+            <div class="header-author">@aigc散修竹相</div>
+            <div class="header-slogan">你我的时间都很宝贵，只分享验证可行的前沿技术</div>
           </div>
-          <div class="header-slogan">你我的时间都很宝贵，只分享验证可行的前沿技术</div>
-          <div class="header-author">@aigc散修竹相</div>
         </div>
-        <div class="current-model">
-          当前模型: <strong>{{ currentModel }}</strong>
+        <div class="header-center">
+          <h1>OpenClaw 模型切换工具</h1>
+        </div>
+        <div class="header-right">
+          <div class="current-model">当前模型: <strong>{{ currentModel }}</strong></div>
         </div>
       </el-header>
 
@@ -220,6 +223,7 @@ import { Setting, DocumentAdd } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { PRESET_PROVIDERS } from './stores/provider'
 import ModelCard from './components/ModelCard.vue'
+import qrcodeImage from '../../qrcode.jpg'
 
 const API_BASE = 'http://127.0.0.1:9131/api'
 
@@ -354,7 +358,7 @@ const handleSubmit = async () => {
     const response = await axios.post(`${API_BASE}/switch`, {
       providerId: config.providerId, baseUrl: config.baseUrl, apiKey: config.apiKey, modelId: modelIdInput.value
     })
-    ElMessage.success('模型已切换！' + response.data.message)
+    ElMessage.success('模型参数已经注入，请手动重启服务')
     modelIdInput.value = ''
     await loadConfig()
   } catch (error) { ElMessage.error('切换失败: ' + (error.response?.data?.detail || error.message)) }
@@ -371,7 +375,7 @@ const handleCardClick = async (card) => {
     const response = await axios.post(`${API_BASE}/switch`, {
       providerId: card.providerId, baseUrl: card.baseUrl, apiKey: apiKey, modelId: card.modelId
     })
-    ElMessage.success('模型已切换！' + response.data.message)
+    ElMessage.success('模型参数已经注入，请手动重启服务')
     await loadConfig()
   } catch (error) { ElMessage.error('切换失败: ' + (error.response?.data?.detail || error.message)) }
   finally { applying.value = false }
@@ -450,11 +454,15 @@ onMounted(() => { loadConfig() })
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; }
 #app { min-height: 100vh; }
 
-.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%); color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
-.header-content { text-align: center; flex: 1; }
-.header-top h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
-.header-slogan { font-size: 13px; opacity: 0.9; margin-bottom: 5px; }
-.header-author { font-size: 12px; opacity: 0.75; }
+.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%) !important; color: white !important; padding: 20px 40px !important; min-height: 120px !important; height: auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important; }
+.header-left { display: flex; align-items: center; gap: 15px; flex: 1; }
+.header-qrcode { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: white; }
+.header-info { display: flex; flex-direction: column; gap: 5px; }
+.header-author { font-size: 14px; font-weight: 600; }
+.header-slogan { font-size: 12px; opacity: 0.85; }
+.header-center { flex: 1; text-align: center; }
+.header-center h1 { font-size: 28px; font-weight: 700; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+.header-right { flex: 1; display: flex; justify-content: flex-end; }
 .current-model { font-size: 14px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
 .current-model strong { color: #fff; margin-left: 5px; }
 

@@ -51,10 +51,15 @@ class GatewayController:
         gateway_cmd = r"C:\Users\Administrator\.openclaw\gateway.cmd"
 
         try:
-            # 用 shell=True 执行 start 命令打开新窗口
+            # 隐藏窗口启动
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
             subprocess.Popen(
-                f'start "" "{gateway_cmd}"',
-                shell=True
+                f'"{gateway_cmd}"',
+                shell=True,
+                startupinfo=startupinfo,
+                cwd=r"C:\Users\Administrator\.openclaw"
             )
             GatewayController._log("Gateway started in new window")
             return True, "Gateway 服务已启动"
