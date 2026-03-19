@@ -35,11 +35,13 @@ class GatewayController:
     def stop_gateway() -> Tuple[bool, str]:
         """停止 OpenClaw Gateway"""
         GatewayController._log("Stopping Gateway...")
-        success, output = GatewayController._execute_command("openclaw gateway stop")
-        if success:
+        # 使用 taskkill 直接终止进程，避免超时
+        success, output = GatewayController._execute_command("taskkill /F /IM openclaw.exe 2>nul")
+        if success or "not found" in output.lower():
             GatewayController._log("Gateway stopped successfully")
-        else:
-            GatewayController._log(f"Failed to stop Gateway: {output}")
+            return True, "Gateway stopped"
+        # 尝试用 openclaw 命令停止
+        success, output = GatewayController._execute_command("openclaw gateway stop")
         return success, output
 
     @staticmethod

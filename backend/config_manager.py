@@ -75,24 +75,30 @@ class ConfigManager:
             if provider_id not in providers:
                 # 创建新提供商
                 provider_config = ProviderConfig(
-                    baseUrl=base_url,
-                    apiKey=api_key,
+                    baseUrl=base_url or "",
+                    apiKey=api_key or "",
                     models=[ProviderModel(
                         id=model_id,
-                        name=f"{model_id} (Custom Provider)"
+                        name=f"{model_id}"
                     )]
                 )
                 providers[provider_id] = provider_config.dict()
             else:
-                # 提供商已存在，添加模型
+                # 提供商已存在，更新基础信息（如果提供）
                 provider = providers[provider_id]
+                if base_url:
+                    provider['baseUrl'] = base_url
+                if api_key:
+                    provider['apiKey'] = api_key
+
+                # 添加模型
                 models = provider.get('models', [])
                 model_ids = [m['id'] for m in models]
 
                 if model_id not in model_ids:
                     models.append({
                         'id': model_id,
-                        'name': f"{model_id} (Custom Provider)",
+                        'name': f"{model_id}",
                         'reasoning': False,
                         'input': ['text'],
                         'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0},

@@ -28,13 +28,27 @@
 
         <!-- 模型卡片列表 -->
         <div class="model-cards-section">
-          <h3>已保存的模型</h3>
-          <div v-if="modelCards.length === 0" class="empty-state">
-            <el-empty description="暂无已保存的模型" />
+          <div class="cards-header">
+            <h3>已保存的模型 ({{ filteredCards.length }})</h3>
+            <div class="cards-actions">
+              <!-- 提供商筛选 -->
+              <el-select v-model="filterProvider" placeholder="全部提供商" clearable size="small" style="width: 140px; margin-right: 10px;">
+                <el-option label="全部" value="" />
+                <el-option v-for="(p, key) in providerOptions" :key="key" :label="p.name" :value="key" />
+              </el-select>
+              <!-- 批量导入 -->
+              <el-button size="small" @click="showBatchImport = true">
+                批量导入
+              </el-button>
+            </div>
+          </div>
+
+          <div v-if="filteredCards.length === 0" class="empty-state">
+            <el-empty :description="filterProvider ? '该提供商下暂无模型' : '暂无已保存的模型'" />
           </div>
           <div v-else class="model-cards-grid">
             <ModelCard
-              v-for="card in modelCards"
+              v-for="card in filteredCards"
               :key="card.id"
               :model="card"
               @click="handleCardClick"
@@ -52,11 +66,68 @@
         </el-button>
       </el-footer>
     </el-container>
+
+    <!-- 批量导入弹窗 -->
+    <el-dialog v-model="showBatchImport" title="批量导入模型" width="500px">
+      <el-tabs v-model="batchImportTab">
+        <el-tab-pane label="在线输入" name="input">
+          <el-input
+            type="textarea"
+            v-model="batchInputText"
+            :rows="8"
+            placeholder="每行一个模型ID，例如：&#10;deepseek-v3&#10;gpt-4o&#10;doubao-seed-1.5"
+          />
+          <div style="margin-top: 10px; color: #909399; font-size: 12px;">
+            每行一个模型ID，支持任意字符
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="文件导入" name="file">
+          <el-upload
+            ref="uploadRef"
+            :auto-upload="false"
+            :limit="1"
+            accept=".txt"
+            :on-change="handleFileChange"
+          >
+            <template #trigger>
+              <el-button>选择 TXT 文件</el-button>
+            </template>
+            <template #tip>
+              <div style="margin-top: 10px; color: #909399; font-size: 12px;">
+                每行一个模型ID
+              </div>
+            </template>
+          </el-upload>
+        </el-tab-pane>
+        <el-tab-pane label="下载模板" name="template">
+          <el-button @click="downloadTemplate">下载模板文件</el-button>
+          <div style="margin-top: 15px; color: #606266; font-size: 13px;">
+            模板格式：每行一个模型ID<br/>
+            # 开头的为注释行<br/>
+            例如：<br/>
+            <code style="background: #f5f7fa; padding: 5px; display: block; margin-top: 5px;">
+# 阿里云模型<br/>
+deepseek-v3<br/>
+qwen-plus<br/>
+# 火山引擎模型<br/>
+doubao-seed-1.5
+            </code>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+
+      <template #footer>
+        <el-button @click="showBatchImport = false">取消</el-button>
+        <el-button type="primary" @click="handleBatchImport" :loading="batchImporting">
+          确认导入
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { useProviderStore, PRESET_PROVIDERS } from './stores/provider'
@@ -82,6 +153,52 @@ const applying = ref(false)
 const refreshing = ref(false)
 const restarting = ref(false)
 
+// 筛选
+const filterProvider = ref('')
+const showBatchImport = ref(false)
+const batchImportTab = ref('input')
+const batchInputText = ref('')
+const batchImporting = ref(false)
+const uploadRef = ref(null)
+const selectedFile = ref(null)
+
+// 提供商选项（用于筛选）
+const providerOptions = PRESET_PROVIDERS
+
+// API Key 存储（localStorage）
+const API_KEY_STORAGE = 'openclaw_api_keys'
+
+const getStoredApiKeys = () => {
+  try {
+    return JSON.parse(localStorage.getItem(API_KEY_STORAGE) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+const saveApiKey = (providerId, apiKey) => {
+  if (!providerId || !apiKey) return
+  const keys = getStoredApiKeys()
+  keys[providerId] = apiKey
+  localStorage.setItem(API_KEY_STORAGE, JSON.stringify(keys))
+}
+
+const getStoredApiKey = (providerId) => {
+  const keys = getStoredApiKeys()
+  return keys[providerId] || ''
+}
+
+// 过滤后的卡片
+const filteredCards = computed(() => {
+  if (!filterProvider.value) return modelCards.value
+  return modelCards.value.filter(card => {
+    const preset = Object.values(PRESET_PROVIDERS).find(p => p.providerId === card.providerId)
+    if (!preset) return false
+    const key = Object.keys(PRESET_PROVIDERS).find(k => PRESET_PROVIDERS[k].providerId === card.providerId)
+    return key === filterProvider.value
+  })
+})
+
 // 加载配置
 const loadConfig = async () => {
   try {
@@ -101,6 +218,8 @@ const handleSelectProvider = (key) => {
     formData.providerId = preset.providerId
     formData.baseUrl = preset.baseUrl
     formData.modelId = ''
+    // 自动填充记忆的 API Key
+    formData.apiKey = getStoredApiKey(preset.providerId)
   }
 }
 
@@ -115,13 +234,18 @@ const handleSelectCustom = () => {
 
 // 保存到通讯录（不重启服务）
 const handleSave = async () => {
-  if (!formData.providerId || !formData.baseUrl || !formData.apiKey || !formData.modelId) {
-    ElMessage.warning('请填写所有必填字段')
+  if (!formData.providerId || !formData.baseUrl || !formData.modelId) {
+    ElMessage.warning('请填写必填字段：提供商/URL/模型ID')
     return
   }
 
   saving.value = true
   try {
+    // 记忆 API Key
+    if (formData.apiKey) {
+      saveApiKey(formData.providerId, formData.apiKey)
+    }
+
     const response = await axios.post(`${API_BASE}/save`, formData)
     ElMessage.success(response.data.message)
     await loadConfig()
@@ -134,13 +258,18 @@ const handleSave = async () => {
 
 // 提交配置（保存并应用）
 const handleSubmit = async () => {
-  if (!formData.providerId || !formData.baseUrl || !formData.apiKey || !formData.modelId) {
-    ElMessage.warning('请填写所有必填字段')
+  if (!formData.providerId || !formData.baseUrl || !formData.modelId) {
+    ElMessage.warning('请填写必填字段：提供商/URL/模型ID')
     return
   }
 
   applying.value = true
   try {
+    // 记忆 API Key
+    if (formData.apiKey) {
+      saveApiKey(formData.providerId, formData.apiKey)
+    }
+
     const response = await axios.post(`${API_BASE}/switch`, formData)
     ElMessage.success(response.data.message)
     await loadConfig()
@@ -208,6 +337,103 @@ const handleRestart = async () => {
   }
 }
 
+// 下载模板
+const downloadTemplate = () => {
+  const template = `# OpenClaw 模型批量导入模板
+# 每行一个模型ID，# 开头的行为注释
+# 请删除所有注释行后导入，或直接填写模型ID
+
+# 阿里云
+deepseek-v3
+qwen-plus
+
+# 火山引擎
+doubao-seed-1.5
+
+# Kimi
+moonshot-v1-8k
+
+# DeepSeek
+deepseek-chat
+
+# OpenAI
+gpt-4o
+`
+  const blob = new Blob([template], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'model_import_template.txt'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// 文件选择
+const handleFileChange = (file) => {
+  selectedFile.value = file.raw
+}
+
+// 批量导入
+const handleBatchImport = async () => {
+  let modelIds = []
+
+  if (batchImportTab.value === 'input') {
+    // 在线输入
+    modelIds = batchInputText.value.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'))
+  } else if (batchImportTab.value === 'file') {
+    // 文件导入
+    if (!selectedFile.value) {
+      ElMessage.warning('请先选择文件')
+      return
+    }
+    const reader = new FileReader()
+    modelIds = await new Promise((resolve) => {
+      reader.onload = (e) => {
+        const text = e.target.result
+        const ids = text.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'))
+        resolve(ids)
+      }
+      reader.readAsText(selectedFile.value)
+    })
+  }
+
+  if (modelIds.length === 0) {
+    ElMessage.warning('未检测到有效模型ID')
+    return
+  }
+
+  if (!formData.providerId || !formData.baseUrl) {
+    ElMessage.warning('请先选择提供商')
+    return
+  }
+
+  batchImporting.value = true
+  let successCount = 0
+  let failCount = 0
+
+  for (const modelId of modelIds) {
+    try {
+      await axios.post(`${API_BASE}/save`, {
+        providerId: formData.providerId,
+        baseUrl: formData.baseUrl,
+        apiKey: formData.apiKey,
+        modelId: modelId
+      })
+      successCount++
+    } catch {
+      failCount++
+    }
+  }
+
+  batchImporting.value = false
+  showBatchImport.value = false
+  batchInputText.value = ''
+  selectedFile.value = null
+
+  ElMessage.success(`导入完成：成功 ${successCount}，失败 ${failCount}`)
+  await loadConfig()
+}
+
 onMounted(() => {
   loadConfig()
 })
@@ -266,10 +492,22 @@ body {
   margin-top: 40px;
 }
 
-.model-cards-section h3 {
+.cards-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.cards-header h3 {
   font-size: 18px;
   color: #303133;
-  margin-bottom: 20px;
+  margin: 0;
+}
+
+.cards-actions {
+  display: flex;
+  align-items: center;
 }
 
 .empty-state {
