@@ -61,7 +61,7 @@ class ConfigManager:
         return self.config.get('models', {}).get('providers', {})
 
     def save_provider(self, provider_id: str, base_url: str, api_key: str, model_id: str) -> bool:
-        """保存提供商配置"""
+        """保存提供商配置（apiKey不保存到JSON文件）"""
         try:
             # 确保 models.providers 节点存在
             if 'models' not in self.config:
@@ -73,10 +73,10 @@ class ConfigManager:
             providers = self.config['models']['providers']
 
             if provider_id not in providers:
-                # 创建新提供商
+                # 创建新提供商（不保存apiKey）
                 provider_config = ProviderConfig(
                     baseUrl=base_url or "",
-                    apiKey=api_key or "",
+                    apiKey="",  # 不保存apiKey到JSON
                     models=[ProviderModel(
                         id=model_id,
                         name=f"{model_id}"
@@ -84,12 +84,11 @@ class ConfigManager:
                 )
                 providers[provider_id] = provider_config.dict()
             else:
-                # 提供商已存在，更新基础信息（如果提供）
+                # 提供商已存在，更新基础信息（不更新apiKey）
                 provider = providers[provider_id]
                 if base_url:
                     provider['baseUrl'] = base_url
-                if api_key:
-                    provider['apiKey'] = api_key
+                # 注意：不保存 api_key 到 JSON 文件
 
                 # 添加模型
                 models = provider.get('models', [])
@@ -147,7 +146,7 @@ class ConfigManager:
             return False
 
     def get_model_cards(self) -> List[Dict]:
-        """获取所有模型卡片"""
+        """获取所有模型卡片（不返回apiKey）"""
         cards = []
         current_model = self.get_current_model()
 
@@ -164,7 +163,7 @@ class ConfigManager:
                     'modelId': model_id,
                     'providerId': provider_id,
                     'baseUrl': provider_config.get('baseUrl', ''),
-                    'apiKey': provider_config.get('apiKey', ''),
+                    # 不返回 apiKey，保护敏感信息
                     'isCurrent': full_id == current_model
                 })
 

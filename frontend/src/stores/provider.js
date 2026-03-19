@@ -26,6 +26,11 @@ export const PRESET_PROVIDERS = {
     name: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
     providerId: 'openai-official'
+  },
+  'minimax': {
+    name: 'MiniMax',
+    baseUrl: 'https://api.minimax.chat/v1',
+    providerId: 'minimax'
   }
 }
 

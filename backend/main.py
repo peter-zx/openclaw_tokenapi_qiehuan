@@ -48,7 +48,7 @@ class ModelCardResponse(BaseModel):
     modelId: str
     providerId: str
     baseUrl: str
-    apiKey: str
+    # 不包含apiKey，保护敏感信息
     isCurrent: bool
 
 
@@ -152,7 +152,6 @@ async def get_config():
                     modelId=card['modelId'],
                     providerId=card['providerId'],
                     baseUrl=card['baseUrl'],
-                    apiKey=card['apiKey'],
                     isCurrent=card['isCurrent']
                 )
                 for card in model_cards

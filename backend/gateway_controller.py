@@ -35,28 +35,29 @@ class GatewayController:
     def stop_gateway() -> Tuple[bool, str]:
         """停止 OpenClaw Gateway"""
         GatewayController._log("Stopping Gateway...")
-        # 使用 taskkill 直接终止进程，避免超时
+        # 使用 taskkill 强制终止进程
         success, output = GatewayController._execute_command("taskkill /F /IM openclaw.exe 2>nul")
         if success or "not found" in output.lower():
-            GatewayController._log("Gateway stopped successfully")
+            GatewayController._log("Gateway stopped")
             return True, "Gateway stopped"
-        # 尝试用 openclaw 命令停止
-        success, output = GatewayController._execute_command("openclaw gateway stop")
         return success, output
 
     @staticmethod
     def start_gateway() -> Tuple[bool, str]:
-        """启动 OpenClaw Gateway（在新窗口中运行）"""
-        GatewayController._log("Starting Gateway in new window...")
+        """启动 OpenClaw Gateway"""
+        GatewayController._log("Starting Gateway...")
+
+        # gateway.cmd 的路径
+        gateway_cmd = r"C:\Users\Administrator\.openclaw\gateway.cmd"
+
         try:
-            # 打开新的 PowerShell 窗口以管理员权限运行 openclaw gateway
+            # 用 shell=True 执行 start 命令打开新窗口
             subprocess.Popen(
-                'start powershell -Command "openclaw gateway; Read-Host \'Press Enter to exit\'"',
-                shell=True,
-                creationflags=subprocess.CREATE_NEW_CONSOLE
+                f'start "" "{gateway_cmd}"',
+                shell=True
             )
-            GatewayController._log("Gateway window opened successfully")
-            return True, "Gateway 服务已在新窗口启动"
+            GatewayController._log("Gateway started in new window")
+            return True, "Gateway 服务已启动"
         except Exception as e:
             GatewayController._log(f"Failed to start Gateway: {e}")
             return False, str(e)
@@ -64,35 +65,34 @@ class GatewayController:
     @staticmethod
     def restart_gateway() -> Tuple[bool, str]:
         """重启 OpenClaw Gateway"""
-        GatewayController._log("Restarting Gateway...")
-        # 先停止
-        success, output = GatewayController.stop_gateway()
-        if not success:
-            GatewayController._log(f"Stop failed: {output}")
-            return False, f"停止失败: {output}"
+        GatewayController._log("=== Restarting Gateway ===")
 
-        # 等待2秒
-        GatewayController._log("Waiting 2 seconds...")
-        time.sleep(2)
+        # Step 1: 停止
+        GatewayController._log("Step 1: Stopping...")
+        GatewayController.stop_gateway()
+        time.sleep(1)
 
-        # 再启动
-        result = GatewayController.start_gateway()
-        GatewayController._log(f"Restart complete: success={result[0]}, message={result[1]}")
-        return result
+        # Step 2: 启动
+        GatewayController._log("Step 2: Starting...")
+        return GatewayController.start_gateway()
 
     @staticmethod
     def control_gateway(action: str) -> Tuple[bool, str]:
         """控制 Gateway 服务"""
-        GatewayController._log(f"Control action received: {action}")
+        GatewayController._log(f"Control action: {action}")
         action_map = {
             'stop': GatewayController.stop_gateway,
             'start': GatewayController.start_gateway,
             'restart': GatewayController.restart_gateway
         }
-
         handler = action_map.get(action.lower())
         if not handler:
-            GatewayController._log(f"Unknown action: {action}")
             return False, f"未知的操作: {action}"
-
         return handler()
+
+
+if __name__ == "__main__":
+    # 测试用
+    print("Testing Gateway Controller...")
+    success, msg = GatewayController.restart_gateway()
+    print(f"Result: success={success}, message={msg}")

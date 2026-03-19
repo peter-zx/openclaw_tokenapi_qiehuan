@@ -7,7 +7,10 @@
   >
     <div class="card-content">
       <div class="model-id">{{ model.modelId }}</div>
-      <div class="provider-name">{{ getProviderName(model.providerId) }}</div>
+      <div class="provider-info">
+        <div class="provider-name">{{ getProviderName(model.providerId) }}</div>
+        <div class="provider-detail">{{ model.baseUrl || '未设置URL' }}</div>
+      </div>
       <div v-if="model.isCurrent" class="current-badge">使用中</div>
       <el-button
         class="delete-btn"
@@ -40,7 +43,7 @@ const getProviderName = (providerId) => {
       return provider.name
     }
   }
-  return providerId
+  return providerId || '自定义'
 }
 </script>
 
@@ -75,9 +78,23 @@ const getProviderName = (providerId) => {
   padding-right: 30px;
 }
 
+.provider-info {
+  background: #f5f7fa;
+  border-radius: 4px;
+  padding: 8px;
+}
+
 .provider-name {
-  font-size: 12px;
+  font-size: 13px;
+  color: #409eff;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.provider-detail {
+  font-size: 11px;
   color: #909399;
+  word-break: break-all;
 }
 
 .current-badge {
