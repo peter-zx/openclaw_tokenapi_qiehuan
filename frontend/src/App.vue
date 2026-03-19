@@ -2,7 +2,13 @@
   <div id="app">
     <el-container>
       <el-header>
-        <h1>OpenClaw 模型切换工具</h1>
+        <div class="header-content">
+          <div class="header-top">
+            <h1>OpenClaw 模型切换工具</h1>
+          </div>
+          <div class="header-slogan">你我的时间都很宝贵，只分享验证可行的前沿技术</div>
+          <div class="header-author">@aigc散修竹相</div>
+        </div>
         <div class="current-model">
           当前模型: <strong>{{ currentModel }}</strong>
         </div>
@@ -14,17 +20,21 @@
           <div class="left-panel">
             <!-- 提供商选择 -->
             <div class="provider-section">
-              <div class="section-title">选择服务商</div>
+              <div class="section-title">
+                选择服务商
+                <span class="section-tip">（点击名称选择，点击齿轮图标配置）</span>
+              </div>
               <div class="provider-buttons">
                 <div
                   v-for="(preset, key) in PRESET_PROVIDERS"
                   :key="key"
-                  class="provider-btn-wrapper"
+                  class="provider-btn-item"
                 >
                   <el-button
                     :type="selectedProvider === key ? 'primary' : 'default'"
                     @click="handleSelectProvider(key)"
                     size="large"
+                    class="provider-name-btn"
                   >
                     {{ preset.name }}
                   </el-button>
@@ -33,13 +43,17 @@
                     @click="openProviderConfig(key)"
                     :icon="Setting"
                     circle
+                    class="provider-config-btn"
                   />
                 </div>
-                <div class="provider-btn-wrapper">
+              </div>
+              <div class="provider-buttons custom-row">
+                <div class="provider-btn-item">
                   <el-button
                     :type="selectedProvider === 'custom' ? 'primary' : 'default'"
                     @click="handleSelectCustom"
                     size="large"
+                    class="provider-name-btn"
                   >
                     自定义
                   </el-button>
@@ -49,6 +63,7 @@
                     @click="openProviderConfig('custom')"
                     :icon="Setting"
                     circle
+                    class="provider-config-btn"
                   />
                 </div>
               </div>
@@ -435,8 +450,11 @@ onMounted(() => { loadConfig() })
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; }
 #app { min-height: 100vh; }
 
-.el-header { background-color: #409eff; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
-.el-header h1 { font-size: 24px; font-weight: 600; }
+.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%); color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+.header-content { text-align: center; flex: 1; }
+.header-top h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+.header-slogan { font-size: 13px; opacity: 0.9; margin-bottom: 5px; }
+.header-author { font-size: 12px; opacity: 0.75; }
 .current-model { font-size: 14px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
 .current-model strong { color: #fff; margin-left: 5px; }
 
@@ -447,10 +465,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .right-panel { flex: 1; min-width: 0; }
 
 .section-title { font-size: 16px; font-weight: 600; color: #303133; margin-bottom: 15px; }
+.section-tip { font-size: 12px; font-weight: normal; color: #909399; margin-left: 10px; }
 
 .provider-section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-.provider-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.provider-btn-wrapper { display: flex; align-items: center; gap: 8px; }
+.provider-buttons { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; justify-content: flex-start; }
+.provider-btn-item { display: flex; align-items: center; gap: 8px; }
+.provider-name-btn { min-width: 100px; }
+.provider-config-btn { flex-shrink: 0; }
+.custom-row { border-top: 1px dashed #e4e7ed; padding-top: 15px; margin-top: 5px; }
 
 .model-input-section { }
 .selected-provider-info { margin-bottom: 15px; font-size: 14px; color: #606266; }
