@@ -44,14 +44,20 @@ class GatewayController:
 
     @staticmethod
     def start_gateway() -> Tuple[bool, str]:
-        """启动 OpenClaw Gateway"""
-        GatewayController._log("Starting Gateway...")
-        success, output = GatewayController._execute_command("openclaw gateway")
-        if success:
-            GatewayController._log("Gateway started successfully")
-        else:
-            GatewayController._log(f"Failed to start Gateway: {output}")
-        return success, output
+        """启动 OpenClaw Gateway（在新窗口中运行）"""
+        GatewayController._log("Starting Gateway in new window...")
+        try:
+            # 打开新的 PowerShell 窗口以管理员权限运行 openclaw gateway
+            subprocess.Popen(
+                'start powershell -Command "openclaw gateway; Read-Host \'Press Enter to exit\'"',
+                shell=True,
+                creationflags=subprocess.CREATE_NEW_CONSOLE
+            )
+            GatewayController._log("Gateway window opened successfully")
+            return True, "Gateway 服务已在新窗口启动"
+        except Exception as e:
+            GatewayController._log(f"Failed to start Gateway: {e}")
+            return False, str(e)
 
     @staticmethod
     def restart_gateway() -> Tuple[bool, str]:
