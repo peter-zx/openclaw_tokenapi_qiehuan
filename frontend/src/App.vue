@@ -105,9 +105,9 @@
                 <div class="step">1. 按 <kbd>Win</kbd> + <kbd>R</kbd></div>
                 <div class="step">2. 输入 <code>powershell</code></div>
                 <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
-                <div class="step">4. 复制以下命令，粘贴到PowerShell中，回车执行：</div>
-                <div class="code-block">taskkill /F /IM node.exe; openclaw gateway</div>
-                <div class="step tip">（这条命令会先关闭旧进程，然后自动启动服务）</div>
+                <div class="step">4. 在PowerShell中逐行执行以下命令：</div>
+                <div class="code-block">taskkill /F /IM node.exe</div>
+                <div class="code-block">openclaw gateway</div>
               </div>
             </div>
           </div>
