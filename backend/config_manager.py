@@ -169,3 +169,49 @@ class ConfigManager:
                 })
 
         return cards
+
+    def delete_model(self, provider_id: str, model_id: str) -> bool:
+        """删除单个模型"""
+        try:
+            providers = self.config.get('models', {}).get('providers', {})
+            if provider_id not in providers:
+                return False
+
+            provider = providers[provider_id]
+            models = provider.get('models', [])
+            original_len = len(models)
+            provider['models'] = [m for m in models if m.get('id') != model_id]
+
+            if len(provider['models']) == original_len:
+                return False
+
+            return self._save_config()
+        except Exception as e:
+            print(f"删除模型失败: {e}")
+            return False
+
+    def delete_provider(self, provider_id: str) -> bool:
+        """删除整个提供商"""
+        try:
+            providers = self.config.get('models', {}).get('providers', {})
+            if provider_id not in providers:
+                return False
+
+            del providers[provider_id]
+            return self._save_config()
+        except Exception as e:
+            print(f"删除提供商失败: {e}")
+            return False
+
+    def update_provider_apikey(self, provider_id: str, api_key: str) -> bool:
+        """更新提供商的 API Key"""
+        try:
+            providers = self.config.get('models', {}).get('providers', {})
+            if provider_id not in providers:
+                return False
+
+            providers[provider_id]['apiKey'] = api_key
+            return self._save_config()
+        except Exception as e:
+            print(f"更新 API Key 失败: {e}")
+            return False

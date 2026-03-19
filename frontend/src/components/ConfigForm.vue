@@ -4,7 +4,7 @@
       <el-input
         v-model="formData.providerId"
         placeholder="请输入提供商ID"
-        :disabled="!isCustom || loading"
+        :disabled="!isCustom"
       />
     </el-form-item>
 
@@ -12,26 +12,33 @@
       <el-input
         v-model="formData.baseUrl"
         placeholder="请输入Base URL"
-        :disabled="loading"
       />
     </el-form-item>
 
     <el-form-item label="API Key">
-      <el-input
-        v-model="formData.apiKey"
-        type="password"
-        placeholder="请输入API Key"
-        show-password
-        :disabled="loading"
-      />
+      <div class="api-key-row">
+        <el-input
+          v-model="formData.apiKey"
+          type="password"
+          placeholder="请输入API Key（可留空，后续单独设置）"
+          show-password
+        />
+        <el-button @click="$emit('open-apikey')" style="margin-left: 8px;">
+          设置
+        </el-button>
+      </div>
     </el-form-item>
 
     <el-form-item label="模型ID">
-      <el-input
-        v-model="formData.modelId"
-        placeholder="请输入模型ID，例如: deepseek-v3"
-        :disabled="loading"
-      />
+      <div class="model-id-row">
+        <el-input
+          v-model="formData.modelId"
+          placeholder="请输入模型ID，例如: deepseek-v3"
+        />
+        <el-button @click="$emit('open-batch-import')" style="margin-left: 8px;">
+          批量导入
+        </el-button>
+      </div>
     </el-form-item>
 
     <div class="button-group">
@@ -40,7 +47,6 @@
         @click="$emit('save')"
         :loading="saving"
         size="large"
-        :disabled="loading"
       >
         {{ saving ? '保存中...' : '保存到通讯录' }}
       </el-button>
@@ -49,7 +55,6 @@
         @click="$emit('submit')"
         :loading="applying"
         size="large"
-        :disabled="saving"
       >
         {{ applying ? '应用中...' : '保存并应用' }}
       </el-button>
@@ -65,19 +70,12 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
-import { PRESET_PROVIDERS } from '../stores/provider'
-
-const props = defineProps({
+defineProps({
   formData: {
     type: Object,
     required: true
   },
   isCustom: {
-    type: Boolean,
-    default: false
-  },
-  loading: {
     type: Boolean,
     default: false
   },
@@ -91,17 +89,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['submit', 'save'])
-
-watch(() => props.isCustom, (newVal) => {
-  if (!newVal && props.selectedProvider) {
-    const preset = PRESET_PROVIDERS[props.selectedProvider]
-    if (preset) {
-      props.formData.providerId = preset.providerId
-      props.formData.baseUrl = preset.baseUrl
-    }
-  }
-})
+defineEmits(['submit', 'save', 'open-apikey', 'open-batch-import'])
 </script>
 
 <style scoped>
@@ -110,6 +98,24 @@ watch(() => props.isCustom, (newVal) => {
   background-color: #f5f7fa;
   border-radius: 8px;
   margin-top: 20px;
+}
+
+.api-key-row {
+  display: flex;
+  width: 100%;
+}
+
+.api-key-row .el-input {
+  flex: 1;
+}
+
+.model-id-row {
+  display: flex;
+  width: 100%;
+}
+
+.model-id-row .el-input {
+  flex: 1;
 }
 
 .button-group {

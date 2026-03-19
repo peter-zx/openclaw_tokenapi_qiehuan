@@ -59,6 +59,12 @@ class SwitchResponse(BaseModel):
     currentModel: Optional[str] = None
 
 
+class DeleteRequest(BaseModel):
+    """删除请求"""
+    providerId: str
+    modelId: Optional[str] = None  # 不填则删除整个提供商
+
+
 class ControlResponse(BaseModel):
     """控制响应"""
     success: bool
@@ -241,6 +247,65 @@ async def get_providers():
         providers = config_manager.get_all_providers()
         return {"providers": list(providers.keys())}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/delete", response_model=SwitchResponse)
+async def delete_model(request: DeleteRequest):
+    """删除模型或提供商"""
+    print(f"[API] Delete request: providerId={request.providerId}, modelId={request.modelId}", flush=True)
+    try:
+        if request.modelId:
+            # 删除单个模型
+            success = config_manager.delete_model(request.providerId, request.modelId)
+            msg = f"模型 {request.modelId} 已删除"
+        else:
+            # 删除整个提供商
+            success = config_manager.delete_provider(request.providerId)
+            msg = f"提供商 {request.providerId} 已删除"
+
+        if not success:
+            raise HTTPException(status_code=500, detail="删除失败")
+
+        print(f"[API] Delete success: {msg}", flush=True)
+        current_model = config_manager.get_current_model()
+
+        return SwitchResponse(
+            success=True,
+            message=msg,
+            currentModel=current_model
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[API] Delete error: {str(e)}", flush=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/provider/apikey", response_model=SwitchResponse)
+async def update_provider_apikey(request: ModelSwitchRequest):
+    """更新提供商的 API Key"""
+    print(f"[API] Update API Key: providerId={request.providerId}", flush=True)
+    try:
+        success = config_manager.update_provider_apikey(
+            request.providerId,
+            request.apiKey
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="更新 API Key 失败")
+
+        print(f"[API] API Key updated for {request.providerId}", flush=True)
+
+        return SwitchResponse(
+            success=True,
+            message=f"API Key 已保存到 {request.providerId}",
+            currentModel=None
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[API] Update API Key error: {str(e)}", flush=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

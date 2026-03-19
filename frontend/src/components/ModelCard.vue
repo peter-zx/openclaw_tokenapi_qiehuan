@@ -9,11 +9,20 @@
       <div class="model-id">{{ model.modelId }}</div>
       <div class="provider-name">{{ getProviderName(model.providerId) }}</div>
       <div v-if="model.isCurrent" class="current-badge">使用中</div>
+      <el-button
+        class="delete-btn"
+        type="danger"
+        size="small"
+        :icon="Delete"
+        circle
+        @click.stop="$emit('delete', model)"
+      />
     </div>
   </el-card>
 </template>
 
 <script setup>
+import { Delete } from '@element-plus/icons-vue'
 import { PRESET_PROVIDERS } from '../stores/provider'
 
 defineProps({
@@ -23,7 +32,7 @@ defineProps({
   }
 })
 
-defineEmits(['click'])
+defineEmits(['click', 'delete'])
 
 const getProviderName = (providerId) => {
   for (const provider of Object.values(PRESET_PROVIDERS)) {
@@ -63,6 +72,7 @@ const getProviderName = (providerId) => {
   color: #303133;
   margin-bottom: 8px;
   word-break: break-all;
+  padding-right: 30px;
 }
 
 .provider-name {
@@ -73,12 +83,24 @@ const getProviderName = (providerId) => {
 .current-badge {
   position: absolute;
   top: 5px;
-  right: 5px;
+  right: 40px;
   background-color: #67c23a;
   color: white;
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: bold;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.model-card:hover .delete-btn {
+  opacity: 1;
 }
 </style>

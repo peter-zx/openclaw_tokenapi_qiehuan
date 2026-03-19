@@ -22,23 +22,26 @@
           :is-custom="providerStore.state.isCustomProvider"
           :saving="saving"
           :applying="applying"
+          :show-batch-import="showBatchImport"
           @submit="handleSubmit"
           @save="handleSave"
+          @open-apikey="handleOpenApiKeyDialog"
+          @open-batch-import="showBatchImport = true"
         />
 
         <!-- 模型卡片列表 -->
         <div class="model-cards-section">
           <div class="cards-header">
             <h3>已保存的模型 ({{ filteredCards.length }})</h3>
-            <div class="cards-actions">
-              <!-- 提供商筛选 -->
-              <el-select v-model="filterProvider" placeholder="全部提供商" clearable size="small" style="width: 140px; margin-right: 10px;">
-                <el-option label="全部" value="" />
-                <el-option v-for="(p, key) in providerOptions" :key="key" :label="p.name" :value="key" />
-              </el-select>
-              <!-- 批量导入 -->
-              <el-button size="small" @click="showBatchImport = true">
-                批量导入
+            <div class="filter-buttons">
+              <el-button
+                v-for="(p, key) in providerOptions"
+                :key="key"
+                :type="filterProvider === key ? 'primary' : 'default'"
+                size="small"
+                @click="filterProvider = filterProvider === key ? '' : key"
+              >
+                {{ p.name }}
               </el-button>
             </div>
           </div>
@@ -52,6 +55,7 @@
               :key="card.id"
               :model="card"
               @click="handleCardClick"
+              @delete="handleDeleteCard"
             />
           </div>
         </div>
@@ -67,8 +71,29 @@
       </el-footer>
     </el-container>
 
+    <!-- API Key 弹窗 -->
+    <el-dialog v-model="showApiKeyDialog" title="设置 API Key" width="400px">
+      <el-form label-position="top">
+        <el-form-item :label="currentProviderName">
+          <el-input
+            v-model="apiKeyInput"
+            type="password"
+            placeholder="请输入 API Key"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showApiKeyDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveApiKey">保存</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 批量导入弹窗 -->
     <el-dialog v-model="showBatchImport" title="批量导入模型" width="500px">
+      <div style="margin-bottom: 15px; color: #909399;">
+        当前提供商：{{ currentProviderName }}（批量导入将使用此提供商的配置）
+      </div>
       <el-tabs v-model="batchImportTab">
         <el-tab-pane label="在线输入" name="input">
           <el-input
@@ -128,7 +153,7 @@ doubao-seed-1.5
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { useProviderStore, PRESET_PROVIDERS } from './stores/provider'
 import ProviderSelect from './components/ProviderSelect.vue'
@@ -162,38 +187,25 @@ const batchImporting = ref(false)
 const uploadRef = ref(null)
 const selectedFile = ref(null)
 
-// 提供商选项（用于筛选）
+// API Key 弹窗
+const showApiKeyDialog = ref(false)
+const apiKeyInput = ref('')
+const currentProviderKey = ref('')
+
+// 提供商选项
 const providerOptions = PRESET_PROVIDERS
 
-// API Key 存储（localStorage）
-const API_KEY_STORAGE = 'openclaw_api_keys'
-
-const getStoredApiKeys = () => {
-  try {
-    return JSON.parse(localStorage.getItem(API_KEY_STORAGE) || '{}')
-  } catch {
-    return {}
-  }
-}
-
-const saveApiKey = (providerId, apiKey) => {
-  if (!providerId || !apiKey) return
-  const keys = getStoredApiKeys()
-  keys[providerId] = apiKey
-  localStorage.setItem(API_KEY_STORAGE, JSON.stringify(keys))
-}
-
-const getStoredApiKey = (providerId) => {
-  const keys = getStoredApiKeys()
-  return keys[providerId] || ''
-}
+// 当前提供商名称
+const currentProviderName = computed(() => {
+  if (!formData.providerId) return '请先选择提供商'
+  const preset = Object.values(PRESET_PROVIDERS).find(p => p.providerId === formData.providerId)
+  return preset ? preset.name : formData.providerId
+})
 
 // 过滤后的卡片
 const filteredCards = computed(() => {
   if (!filterProvider.value) return modelCards.value
   return modelCards.value.filter(card => {
-    const preset = Object.values(PRESET_PROVIDERS).find(p => p.providerId === card.providerId)
-    if (!preset) return false
     const key = Object.keys(PRESET_PROVIDERS).find(k => PRESET_PROVIDERS[k].providerId === card.providerId)
     return key === filterProvider.value
   })
@@ -218,8 +230,7 @@ const handleSelectProvider = (key) => {
     formData.providerId = preset.providerId
     formData.baseUrl = preset.baseUrl
     formData.modelId = ''
-    // 自动填充记忆的 API Key
-    formData.apiKey = getStoredApiKey(preset.providerId)
+    formData.apiKey = ''
   }
 }
 
@@ -232,6 +243,33 @@ const handleSelectCustom = () => {
   formData.modelId = ''
 }
 
+// 打开 API Key 弹窗
+const handleOpenApiKeyDialog = () => {
+  currentProviderKey.value = formData.providerId
+  apiKeyInput.value = formData.apiKey || ''
+  showApiKeyDialog.value = true
+}
+
+// 保存 API Key
+const handleSaveApiKey = async () => {
+  if (!currentProviderKey.value) {
+    ElMessage.warning('请先选择提供商')
+    return
+  }
+
+  try {
+    await axios.post(`${API_BASE}/provider/apikey`, {
+      providerId: currentProviderKey.value,
+      apiKey: apiKeyInput.value
+    })
+    formData.apiKey = apiKeyInput.value
+    showApiKeyDialog.value = false
+    ElMessage.success('API Key 已保存')
+  } catch (error) {
+    ElMessage.error('保存失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
 // 保存到通讯录（不重启服务）
 const handleSave = async () => {
   if (!formData.providerId || !formData.baseUrl || !formData.modelId) {
@@ -241,11 +279,6 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    // 记忆 API Key
-    if (formData.apiKey) {
-      saveApiKey(formData.providerId, formData.apiKey)
-    }
-
     const response = await axios.post(`${API_BASE}/save`, formData)
     ElMessage.success(response.data.message)
     await loadConfig()
@@ -265,11 +298,6 @@ const handleSubmit = async () => {
 
   applying.value = true
   try {
-    // 记忆 API Key
-    if (formData.apiKey) {
-      saveApiKey(formData.providerId, formData.apiKey)
-    }
-
     const response = await axios.post(`${API_BASE}/switch`, formData)
     ElMessage.success(response.data.message)
     await loadConfig()
@@ -301,6 +329,28 @@ const handleCardClick = async (card) => {
     ElMessage.error('切换模型失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     applying.value = false
+  }
+}
+
+// 删除卡片
+const handleDeleteCard = async (card) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除模型 "${card.modelId}" 吗？`,
+      '确认删除',
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+    )
+
+    const response = await axios.post(`${API_BASE}/delete`, {
+      providerId: card.providerId,
+      modelId: card.modelId
+    })
+    ElMessage.success(response.data.message)
+    await loadConfig()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败: ' + (error.response?.data?.detail || error.message))
+    }
   }
 }
 
@@ -378,10 +428,8 @@ const handleBatchImport = async () => {
   let modelIds = []
 
   if (batchImportTab.value === 'input') {
-    // 在线输入
     modelIds = batchInputText.value.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'))
   } else if (batchImportTab.value === 'file') {
-    // 文件导入
     if (!selectedFile.value) {
       ElMessage.warning('请先选择文件')
       return
@@ -493,21 +541,19 @@ body {
 }
 
 .cards-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20px;
 }
 
 .cards-header h3 {
   font-size: 18px;
   color: #303133;
-  margin: 0;
+  margin: 0 0 15px 0;
 }
 
-.cards-actions {
+.filter-buttons {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .empty-state {
