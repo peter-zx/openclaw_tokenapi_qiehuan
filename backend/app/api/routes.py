@@ -48,18 +48,29 @@ async def switch_model(request: ModelSwitchRequest):
         if not switch_success:
             raise HTTPException(status_code=500, detail="切换模型失败")
 
-        restart_success, message = gateway_controller.restart_gateway()
+        # 使用指定的命令重启 Gateway
+        success, message = gateway_controller.restart_with_command()
         current_model = config_manager.get_current_model()
 
         return SwitchResponse(
-            success=restart_success,
-            message=f"模型已切换到 {current_model}\n重启服务: {'成功' if restart_success else '失败'} - {message}",
+            success=success,
+            message=f"模型已切换到 {current_model}\n重启服务: {'成功' if success else '失败'}",
             currentModel=current_model
         )
     except HTTPException:
         raise
     except Exception as e:
         print(f"[API] Switch error: {str(e)}", flush=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/restart-gateway", response_model=ControlResponse)
+async def restart_gateway_cmd():
+    """使用指定命令重启 Gateway"""
+    try:
+        success, message = gateway_controller.restart_with_command()
+        return ControlResponse(success=success, message=message)
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 

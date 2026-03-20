@@ -72,6 +72,21 @@ class GatewayController:
         return GatewayController.start_gateway()
 
     @staticmethod
+    def restart_with_command() -> Tuple[bool, str]:
+        """使用指定命令重启 Gateway: 调用脚本打开新 PowerShell 窗口"""
+        GatewayController._log("=== Restarting Gateway with new PowerShell ===")
+
+        script_path = r"C:\Users\Administrator\Desktop\0319\restart_gateway.bat"
+
+        try:
+            subprocess.Popen([script_path], shell=True)
+            GatewayController._log(f"Restart script executed: {script_path}")
+            return True, "已打开 PowerShell 窗口执行重启命令"
+        except Exception as e:
+            GatewayController._log(f"Failed to execute restart script: {e}")
+            return False, str(e)
+
+    @staticmethod
     def control_gateway(action: str) -> Tuple[bool, str]:
         """控制 Gateway 服务"""
         GatewayController._log(f"Control action: {action}")

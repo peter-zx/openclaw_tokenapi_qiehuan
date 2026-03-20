@@ -125,7 +125,7 @@
                 <div class="step">2. 输入 <code>powershell</code></div>
                 <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
                 <div class="step">4. 粘贴以下命令回车执行：</div>
-                <div class="code-block">taskkill /F /IM node.exe; Start-Sleep -Seconds 8; openclaw gateway</div>
+                <div class="code-block">Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; openclaw gateway</div>
               </div>
               <div class="guide-steps">
                 <p><strong>服务管理：</strong></p>
@@ -394,7 +394,7 @@ const handleSubmit = async () => {
     const response = await axios.post(`${API_BASE}/switch`, {
       providerId: config.providerId, baseUrl: config.baseUrl, apiKey: config.apiKey, modelId: modelIdInput.value
     })
-    ElMessage.success('模型参数已经注入，请手动重启服务')
+    ElMessage.success({ message: '模型已切换，正在重启服务，请等待 8 秒...', duration: 5000 })
     modelIdInput.value = ''
     await loadConfig()
   } catch (error) { ElMessage.error('切换失败: ' + (error.response?.data?.detail || error.message)) }
@@ -411,7 +411,7 @@ const handleCardClick = async (card) => {
     const response = await axios.post(`${API_BASE}/switch`, {
       providerId: card.providerId, baseUrl: card.baseUrl, apiKey: apiKey, modelId: card.modelId
     })
-    ElMessage.success('模型参数已经注入，请手动重启服务')
+    ElMessage.success({ message: '模型已切换，正在重启服务，请等待 8 秒...', duration: 5000 })
     await loadConfig()
   } catch (error) { ElMessage.error('切换失败: ' + (error.response?.data?.detail || error.message)) }
   finally { applying.value = false }
