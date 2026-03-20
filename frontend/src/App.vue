@@ -117,15 +117,16 @@
 
             <!-- 重启服务说明 -->
             <div class="restart-guide">
-              <div class="section-title">重启 OpenClaw 服务</div>
+              <div class="section-title">OpenClaw 运维指令</div>
               <div class="guide-steps">
-                <p><strong>操作步骤：</strong></p>
-                <div class="step">1. 按 <kbd>Win</kbd> + <kbd>R</kbd></div>
-                <div class="step">2. 输入 <code>powershell</code></div>
-                <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
-                <div class="step">4. 在PowerShell中逐行执行以下命令：</div>
-                <div class="code-block">taskkill /F /IM node.exe</div>
+                <p><strong>常用指令：</strong></p>
                 <div class="code-block">openclaw gateway</div>
+                <div class="code-block">openclaw gateway stop</div>
+                <div class="code-block">openclaw gateway restart</div>
+                <div class="code-block">openclaw health</div>
+                <div class="code-block">openclaw doctor</div>
+                <div class="code-block">openclaw logs --tail 100</div>
+                <p class="step tip">在 PowerShell（管理员）中执行以上指令</p>
               </div>
             </div>
           </div>
@@ -504,7 +505,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 kbd { background: #f5f7fa; border: 1px solid #dcdfe6; border-radius: 4px; padding: 2px 6px; font-size: 12px; }
 code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff; }
 .code-block { background: #283142; color: #67c23a; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-top: 8px; white-space: pre; }
-.step.tip { color: #909399; font-size: 12px; margin-top: 8px; }
+.step.tip { color: #e6a23c; font-size: 12px; margin-top: 10px; font-weight: 500; }
 
 /* 卡片 */
 .cards-header { margin-bottom: 20px; }
