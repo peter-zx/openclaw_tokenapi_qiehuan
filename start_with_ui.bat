@@ -45,8 +45,8 @@ echo.
 echo  [Step 5/5] Starting service...
 echo.
 
-if not exist "backend\main.py" (
-    echo  [ERROR] backend\main.py not found
+if not exist "backend\start.py" (
+    echo  [ERROR] backend\start.py not found
     pause
     exit /b 1
 )
@@ -63,4 +63,4 @@ echo   Press CTRL+C to stop
 echo ========================================
 echo.
 
-"venv\Scripts\python.exe" "backend\main.py"
+"venv\Scripts\python.exe" "backend\start.py"
