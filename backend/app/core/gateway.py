@@ -76,7 +76,7 @@ class GatewayController:
         """使用指定命令重启 Gateway: 调用脚本打开新 PowerShell 窗口"""
         GatewayController._log("=== Restarting Gateway with new PowerShell ===")
 
-        script_path = r"C:\Users\Administrator\Desktop\0319\restart_gateway.bat"
+        script_path = r"C:\Users\Administrator\Desktop\0319\tools\restart_gateway.bat"
 
         try:
             subprocess.Popen([script_path], shell=True)
