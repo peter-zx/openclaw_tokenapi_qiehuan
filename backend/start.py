@@ -14,12 +14,25 @@ from app.main import app
 
 if __name__ == "__main__":
     import uvicorn
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
 
     frontend_dist = os.path.join(backend_path, "..", "frontend", "dist")
+
     if os.path.exists(frontend_dist):
-        assets_dir = os.path.join(frontend_dist, "assets")
-        if os.path.exists(assets_dir):
-            from fastapi.staticfiles import StaticFiles
-            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        # 挂载静态文件目录
+        app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+        # 添加根路径路由以提供 index.html
+        @app.get("/")
+        async def serve_index():
+            return FileResponse(os.path.join(frontend_dist, "index.html"))
+
+        # 添加 qrcode.jpg 等 public 文件的路由
+        public_dir = os.path.join(backend_path, "..", "frontend", "public")
+        if os.path.exists(public_dir):
+            @app.get("/qrcode.jpg")
+            async def serve_qrcode():
+                return FileResponse(os.path.join(public_dir, "qrcode.jpg"))
 
     uvicorn.run(app, host="127.0.0.1", port=9131, log_level="info")

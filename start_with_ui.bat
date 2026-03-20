@@ -6,17 +6,15 @@ title OpenClaw Model Switcher
 setlocal enabledelayedexpansion
 
 set "CURRENT_VERSION=1.0.0"
-set "REPO_URL=https://github.com/peter-zx/openclaw_tokenapi_qiehuan"
+set "REPO_OWNER=peter-zx"
+set "REPO_NAME=openclaw_tokenapi_qiehuan"
+set "REPO_URL=https://github.com/%REPO_OWNER%/%REPO_NAME%"
+set "API_URL=https://api.github.com/repos/%REPO_OWNER%/%REPO_NAME%/releases/latest"
 
 echo.
 echo ========================================
 echo   OpenClaw Model Switcher v%CURRENT_VERSION%
 echo ========================================
-echo.
-
-REM 检查更新提示
-echo  [INFO] 当前版本: v%CURRENT_VERSION%
-echo  [INFO] 检查更新: %REPO_URL%/releases
 echo.
 
 echo  [Step 1/6] Checking Python environment...
@@ -33,16 +31,25 @@ echo  [OK] Python detected
 echo.
 echo  [Step 2/6] Checking for updates...
 
-REM 尝试获取远程版本（如果 git 可用）
-set "LATEST_VERSION="
-for /f "delims=" %%i in ('git ls-remote --tags %REPO_URL% 2^>nul') do (
-    set "LATEST_VERSION=%%i"
-)
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri '%API_URL%' -UseBasicParsing -TimeoutSec 10; $j = $r.Content | ConvertFrom-Json; Write-Host ('LATEST:' + $j.tag_name) } catch { Write-Host 'ERROR' }" > "%TEMP%\gh_ver.tmp" 2>nul
 
-if defined LATEST_VERSION (
-    echo  [INFO] 远程版本: !LATEST_VERSION!
+set "LATEST_TAG="
+for /f "tokens=2" %%a in ('type "%TEMP%\gh_ver.tmp"') do set "LATEST_TAG=%%a"
+del /f /q "%TEMP%\gh_ver.tmp" 2>nul
+
+set "LATEST_TAG=!LATEST_TAG: =!"
+set "LATEST_VERSION=!LATEST_TAG!"
+if "!LATEST_TAG:~0,1!"=="v" set "LATEST_VERSION=!LATEST_TAG:~1!"
+
+if "!LATEST_TAG!"=="ERROR" (
+    echo  [WARN] Unable to check remote version
 ) else (
-    echo  [INFO] 无法检测远程版本，请手动检查更新
+    echo  [INFO] Current: v%CURRENT_VERSION%  Latest: !LATEST_TAG!
+    if not "!LATEST_VERSION!"=="%CURRENT_VERSION%" (
+        echo  [INFO] New version available: !REPO_URL!/releases
+    ) else (
+        echo  [OK] Already up to date
+    )
 )
 
 echo.
@@ -69,7 +76,6 @@ echo  [OK] Dependencies ready
 
 echo.
 echo  [Step 6/6] Starting service...
-echo.
 
 if not exist "backend\start.py" (
     echo  [ERROR] backend\start.py not found
@@ -77,7 +83,6 @@ if not exist "backend\start.py" (
     exit /b 1
 )
 
-REM Open browser
 start http://127.0.0.1:9131
 
 echo.

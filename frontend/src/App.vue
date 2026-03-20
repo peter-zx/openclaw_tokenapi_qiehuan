@@ -125,7 +125,7 @@
                 <div class="step">2. 输入 <code>powershell</code></div>
                 <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
                 <div class="step">4. 粘贴以下命令回车执行：</div>
-                <div class="code-block">taskkill /F /IM node.exe; openclaw gateway</div>
+                <div class="code-block">taskkill /F /IM node.exe; Start-Sleep -Seconds 8; openclaw gateway</div>
               </div>
               <div class="guide-steps">
                 <p><strong>服务管理：</strong></p>
@@ -544,6 +544,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 kbd { background: #f5f7fa; border: 1px solid #dcdfe6; border-radius: 4px; padding: 2px 6px; font-size: 12px; }
 code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff; }
 .code-block { background: #283142; color: #67c23a; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-top: 8px; white-space: pre; }
+.step-tip { color: #e6a23c; font-size: 12px; margin-top: 8px; font-weight: 500; padding-left: 10px; }
 .step.tip { color: #e6a23c; font-size: 12px; margin-top: 10px; font-weight: 500; }
 
 /* 卡片 */
