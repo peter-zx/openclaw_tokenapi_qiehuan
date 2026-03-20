@@ -5,12 +5,13 @@
         <div class="header-left">
           <img :src="qrcodeImage" alt="QR Code" class="header-qrcode">
           <div class="header-info">
-            <div class="header-author">@aigc散修竹相</div>
+            <div class="header-author">@aigc散修竹相左边</div>
             <div class="header-slogan">你我的时间都很宝贵，只分享验证可行的前沿技术</div>
           </div>
         </div>
         <div class="header-center">
-          <h1>OpenClaw 模型切换工具</h1>
+          <h1>OpenClaw</h1>
+          <h2>模型切换工具</h2>
         </div>
         <div class="header-right">
           <div class="current-model">当前模型: <strong>{{ currentModel }}</strong></div>
@@ -115,18 +116,42 @@
               </div>
             </div>
 
-            <!-- 重启服务说明 -->
+            <!-- 运维指令 -->
             <div class="restart-guide">
               <div class="section-title">OpenClaw 运维指令</div>
               <div class="guide-steps">
-                <p><strong>常用指令：</strong></p>
+                <p><strong>重启服务步骤（应用模型修改）：</strong></p>
+                <div class="step">1. 按 <kbd>Win</kbd> + <kbd>R</kbd></div>
+                <div class="step">2. 输入 <code>powershell</code></div>
+                <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
+                <div class="step">4. 粘贴以下命令回车执行：</div>
+                <div class="code-block">taskkill /F /IM node.exe; openclaw gateway</div>
+              </div>
+              <div class="guide-steps">
+                <p><strong>服务管理：</strong></p>
                 <div class="code-block">openclaw gateway</div>
+                <div class="code-block">openclaw gateway --port 18789</div>
                 <div class="code-block">openclaw gateway stop</div>
                 <div class="code-block">openclaw gateway restart</div>
                 <div class="code-block">openclaw health</div>
-                <div class="code-block">openclaw doctor</div>
+              </div>
+              <div class="guide-steps">
+                <p><strong>配置管理：</strong></p>
+                <div class="code-block">openclaw configure</div>
+                <div class="code-block">openclaw config</div>
+                <div class="code-block">openclaw version</div>
+                <div class="code-block">openclaw update</div>
+              </div>
+              <div class="guide-steps">
+                <p><strong>日志与诊断：</strong></p>
                 <div class="code-block">openclaw logs --tail 100</div>
-                <p class="step tip">在 PowerShell（管理员）中执行以上指令</p>
+                <div class="code-block">openclaw doctor</div>
+                <div class="code-block">openclaw clean</div>
+              </div>
+              <div class="guide-steps">
+                <p><strong>紧急自救 (Windows PowerShell)：</strong></p>
+                <div class="code-block">taskkill /F /IM node.exe</div>
+                <div class="code-block">tasklist | findstr node</div>
               </div>
             </div>
           </div>
@@ -168,6 +193,16 @@
           </div>
         </div>
       </el-main>
+
+      <el-footer class="app-footer">
+        <div class="footer-content">
+          <span>@aigc散修竹相左边</span>
+          <span class="separator">|</span>
+          <span>v1.0.0</span>
+          <span class="separator">|</span>
+          <span>2026-03-19</span>
+        </div>
+      </el-footer>
     </el-container>
 
     <!-- 提供商配置弹窗 -->
@@ -224,7 +259,7 @@ import { Setting, DocumentAdd } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { PRESET_PROVIDERS } from './stores/provider'
 import ModelCard from './components/ModelCard.vue'
-import qrcodeImage from '../../qrcode.jpg'
+const qrcodeImage = '/qrcode.jpg'
 
 const API_BASE = 'http://127.0.0.1:9131/api'
 
@@ -455,19 +490,23 @@ onMounted(() => { loadConfig() })
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f7fa; }
 #app { min-height: 100vh; }
 
-.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%) !important; color: white !important; padding: 20px 40px !important; min-height: 300px !important; height: auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important; }
-.header-left { display: flex; align-items: center; gap: 15px; flex: 1; }
-.header-qrcode { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: white; }
+.el-header { background: linear-gradient(135deg, #409eff 0%, #3078d8 100%) !important; color: white !important; padding: 15px 40px !important; min-height: 150px !important; height: auto !important; display: flex !important; justify-content: space-between !important; align-items: center !important; flex-shrink: 0 !important; }
+.header-left { display: flex; align-items: flex-start; gap: 15px; flex: 1; margin: 15px 0 15px 0; }
+.header-qrcode { width: 90px; height: 90px; border-radius: 8px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3); }
 .header-info { display: flex; flex-direction: column; gap: 5px; }
 .header-author { font-size: 14px; font-weight: 600; }
 .header-slogan { font-size: 12px; opacity: 0.85; }
-.header-center { flex: 1; text-align: center; }
-.header-center h1 { font-size: 28px; font-weight: 700; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+.header-center { flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.header-center h1 { font-size: 36px; font-weight: 800; margin: 0 0 5px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); letter-spacing: 3px; }
+.header-center h2 { font-size: 18px; font-weight: 400; margin: 0; opacity: 0.9; letter-spacing: 5px; }
 .header-right { flex: 1; display: flex; justify-content: flex-end; }
 .current-model { font-size: 14px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
 .current-model strong { color: #fff; margin-left: 5px; }
 
 .el-main { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.el-footer { background: #f5f7fa; padding: 15px; text-align: center; color: #909399; font-size: 13px; }
+.footer-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
+.separator { color: #dcdfe6; }
 
 .main-layout { display: flex; gap: 40px; }
 .left-panel { flex: 0 0 400px; }
