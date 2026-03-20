@@ -124,34 +124,32 @@
                 <div class="step">1. 按 <kbd>Win</kbd> + <kbd>R</kbd></div>
                 <div class="step">2. 输入 <code>powershell</code></div>
                 <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
-                <div class="step">4. 粘贴以下命令回车执行：</div>
-                <div class="code-block">Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; openclaw gateway</div>
+                <div class="step">4. 复制以下命令粘贴执行：</div>
+                <div class="code-wrapper">
+                  <div class="code-block">Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; openclaw gateway</div>
+                  <button class="code-copy-btn" @click="copyRestartCmd">复制</button>
+                </div>
               </div>
               <div class="guide-steps">
                 <p><strong>服务管理：</strong></p>
-                <div class="code-block">openclaw gateway</div>
-                <div class="code-block">openclaw gateway --port 18789</div>
-                <div class="code-block">openclaw gateway stop</div>
-                <div class="code-block">openclaw gateway restart</div>
-                <div class="code-block">openclaw health</div>
+                <div class="code-wrapper"><div class="code-block">openclaw gateway</div><button class="code-copy-btn" @click="copyCode('openclaw gateway')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw gateway --port 18789</div><button class="code-copy-btn" @click="copyCode('openclaw gateway --port 18789')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw gateway stop</div><button class="code-copy-btn" @click="copyCode('openclaw gateway stop')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw gateway restart</div><button class="code-copy-btn" @click="copyCode('openclaw gateway restart')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw health</div><button class="code-copy-btn" @click="copyCode('openclaw health')">复制</button></div>
               </div>
               <div class="guide-steps">
                 <p><strong>配置管理：</strong></p>
-                <div class="code-block">openclaw configure</div>
-                <div class="code-block">openclaw config</div>
-                <div class="code-block">openclaw version</div>
-                <div class="code-block">openclaw update</div>
+                <div class="code-wrapper"><div class="code-block">openclaw configure</div><button class="code-copy-btn" @click="copyCode('openclaw configure')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw config</div><button class="code-copy-btn" @click="copyCode('openclaw config')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw version</div><button class="code-copy-btn" @click="copyCode('openclaw version')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw update</div><button class="code-copy-btn" @click="copyCode('openclaw update')">复制</button></div>
               </div>
               <div class="guide-steps">
                 <p><strong>日志与诊断：</strong></p>
-                <div class="code-block">openclaw logs --tail 100</div>
-                <div class="code-block">openclaw doctor</div>
-                <div class="code-block">openclaw clean</div>
-              </div>
-              <div class="guide-steps">
-                <p><strong>紧急自救 (Windows PowerShell)：</strong></p>
-                <div class="code-block">taskkill /F /IM node.exe</div>
-                <div class="code-block">tasklist | findstr node</div>
+                <div class="code-wrapper"><div class="code-block">openclaw logs --tail 100</div><button class="code-copy-btn" @click="copyCode('openclaw logs --tail 100')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw doctor</div><button class="code-copy-btn" @click="copyCode('openclaw doctor')">复制</button></div>
+                <div class="code-wrapper"><div class="code-block">openclaw clean</div><button class="code-copy-btn" @click="copyCode('openclaw clean')">复制</button></div>
               </div>
             </div>
           </div>
@@ -428,6 +426,19 @@ const getStoredProviderConfigByProviderId = (providerId) => {
   return null
 }
 
+const copyCode = async (code) => {
+  try {
+    await navigator.clipboard.writeText(code)
+    ElMessage.success('已复制到剪贴板')
+  } catch {
+    ElMessage.error('复制失败')
+  }
+}
+
+const copyRestartCmd = async () => {
+  await copyCode('Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; openclaw gateway')
+}
+
 const handleDeleteCard = async (card) => {
   try {
     await ElMessageBox.confirm(`确定删除模型 "${card.modelId}" 吗？`, '确认删除', { type: 'warning' })
@@ -508,8 +519,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .footer-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
 .separator { color: #dcdfe6; }
 
-.main-layout { display: flex; gap: 40px; }
-.left-panel { flex: 0 0 400px; }
+.main-layout { display: flex; gap: 30px; }
+.left-panel { flex: 0 0 420px; }
 .right-panel { flex: 1; min-width: 0; }
 
 .section-title { font-size: 16px; font-weight: 600; color: #303133; margin-bottom: 15px; }
@@ -537,13 +548,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 /* 重启服务说明 */
 .restart-guide { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-.guide-steps { margin-bottom: 20px; }
+.guide-steps { margin-bottom: 15px; }
 .guide-steps:last-child { margin-bottom: 0; }
-.guide-steps p { margin-bottom: 10px; color: #303133; }
-.step { margin-bottom: 8px; color: #606266; font-size: 14px; }
+.guide-steps p { margin-bottom: 8px; color: #303133; font-size: 14px; }
+.step { margin-bottom: 6px; color: #606266; font-size: 13px; }
 kbd { background: #f5f7fa; border: 1px solid #dcdfe6; border-radius: 4px; padding: 2px 6px; font-size: 12px; }
 code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff; }
-.code-block { background: #283142; color: #67c23a; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-top: 8px; white-space: pre; }
+.code-wrapper { position: relative; margin-top: 8px; }
+.code-block { background: #283142; color: #67c23a; padding: 10px 40px 10px 15px; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; overflow: hidden; max-height: 48px; }
+.code-copy-btn { position: absolute; top: 4px; right: 4px; background: rgba(255,255,255,0.1); border: none; color: #67c23a; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+.code-copy-btn:hover { background: rgba(255,255,255,0.2); }
 .step-tip { color: #e6a23c; font-size: 12px; margin-top: 8px; font-weight: 500; padding-left: 10px; }
 .step.tip { color: #e6a23c; font-size: 12px; margin-top: 10px; font-weight: 500; }
 
@@ -552,5 +566,5 @@ code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff
 .cards-header h3 { font-size: 18px; color: #303133; margin-bottom: 15px; }
 .filter-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .empty-state { text-align: center; padding: 40px 0; }
-.model-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.model-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 </style>

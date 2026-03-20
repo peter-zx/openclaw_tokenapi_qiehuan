@@ -83,8 +83,6 @@ if not exist "backend\start.py" (
     exit /b 1
 )
 
-start http://127.0.0.1:9131
-
 echo.
 echo ========================================
 echo   Service starting...
@@ -94,4 +92,7 @@ echo   Press CTRL+C to stop
 echo ========================================
 echo.
 
+start http://127.0.0.1:9131
+
 "venv\Scripts\python.exe" "backend\start.py"
+pause
