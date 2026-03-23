@@ -126,7 +126,7 @@
                 <div class="step">3. 右键选择 <strong>"以管理员身份运行"</strong></div>
                 <div class="step">4. 复制以下命令粘贴执行：</div>
                 <div class="code-wrapper">
-                  <div class="code-block">Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; openclaw gateway</div>
+                  <div class="code-block">Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 8; openclaw gateway</div>
                   <button class="code-copy-btn" @click="copyRestartCmd">复制</button>
                 </div>
               </div>
@@ -480,7 +480,7 @@ const copyCode = async (code) => {
 }
 
 const copyRestartCmd = async () => {
-  await copyCode('Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 5; openclaw gateway')
+  await copyCode('Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 8; openclaw gateway')
 }
 
 const handleDeleteCard = async (card) => {
