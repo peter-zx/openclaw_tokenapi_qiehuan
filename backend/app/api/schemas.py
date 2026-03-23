@@ -84,7 +84,7 @@ class AdvancedSettingsSchema(BaseModel):
     denyShell: bool = False
     execHost: str = "gateway"
     execAsk: str = "always"
-    execSecurity: str = "full"
+    execSecurity: str = "allow"
     sandboxMode: str = "off"
     compactionMode: str = "safeguard"
     dmScope: str = "per-channel-peer"

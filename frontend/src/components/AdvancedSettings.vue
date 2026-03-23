@@ -90,8 +90,9 @@
               <div class="field-group">
                 <div class="field-label">安全模式</div>
                 <el-radio-group v-model="form.execSecurity" class="radio-pills-v">
-                  <el-radio value="full">full 无限制，完全开放</el-radio>
+                  <el-radio value="allow">allow 完全开放</el-radio>
                   <el-radio value="allowlist">allowlist 白名单制</el-radio>
+                  <el-radio value="full">full 完整权限</el-radio>
                   <el-radio value="deny">deny 拒绝所有</el-radio>
                 </el-radio-group>
               </div>
@@ -208,7 +209,7 @@ const form = ref({
   denyShell: false,
   execHost: 'gateway',
   execAsk: 'off',
-  execSecurity: 'full',
+  execSecurity: 'allow',
   sandboxMode: 'off',
   compactionMode: 'safeguard',
   dmScope: 'per-channel-peer',
