@@ -51,12 +51,13 @@
             <div class="setting-item">
               <div class="setting-label">沙箱模式 <span class="label-key">agents.defaults.sandbox.mode</span></div>
               <el-radio-group v-model="form.sandboxMode" class="setting-radios">
+                <el-radio value="off">off（关闭沙箱）</el-radio>
                 <el-radio value="default">default</el-radio>
-                <el-radio value="safeguard">safeguard</el-radio>
+                <el-radio value="safeguard">safeguard（推荐）</el-radio>
                 <el-radio value="non-main">non-main</el-radio>
                 <el-radio value="all">all</el-radio>
               </el-radio-group>
-              <div class="setting-tip">default：默认 &nbsp;|&nbsp; safeguard：安全保护（推荐）&nbsp;|&nbsp; non-main：非主线程 &nbsp;|&nbsp; all：全部隔离</div>
+              <div class="setting-tip">off：关闭沙箱 &nbsp;|&nbsp; default：默认 &nbsp;|&nbsp; safeguard：安全保护 &nbsp;|&nbsp; non-main：非主线程 &nbsp;|&nbsp; all：全部隔离</div>
             </div>
           </div>
           <div class="setting-row">
@@ -118,7 +119,7 @@ const saving = ref(false)
 
 const form = ref({
   execHost: 'gateway',
-  sandboxMode: 'safeguard',
+  sandboxMode: 'off',
   compactionMode: 'safeguard',
   toolsProfile: 'full',
   dmScope: 'per-channel-peer'
@@ -126,7 +127,7 @@ const form = ref({
 
 const defaults = {
   execHost: 'gateway',
-  sandboxMode: 'safeguard',
+  sandboxMode: 'off',
   compactionMode: 'safeguard',
   toolsProfile: 'full',
   dmScope: 'per-channel-peer'

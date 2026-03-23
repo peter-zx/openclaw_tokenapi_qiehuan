@@ -327,7 +327,7 @@ class ConfigManager:
 
         return {
             "execHost": tools.get("exec", {}).get("host", "gateway"),
-            "sandboxMode": agents.get("sandbox", {}).get("mode", "safeguard"),
+            "sandboxMode": agents.get("sandbox", {}).get("mode", "off"),
             "compactionMode": agents.get("compaction", {}).get("mode", "safeguard"),
             "toolsProfile": tools.get("profile", "full"),
             "dmScope": session.get("dmScope", "per-channel-peer"),
@@ -349,7 +349,7 @@ class ConfigManager:
                 self.config["agents"]["defaults"] = {}
 
             agents_defaults = self.config["agents"]["defaults"]
-            agents_defaults.setdefault("sandbox", {})["mode"] = settings.get("sandboxMode", "safeguard")
+            agents_defaults.setdefault("sandbox", {})["mode"] = settings.get("sandboxMode", "off")
             agents_defaults.setdefault("compaction", {})["mode"] = settings.get("compactionMode", "safeguard")
 
             if "session" not in self.config:
