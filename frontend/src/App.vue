@@ -15,7 +15,6 @@
         </div>
         <div class="header-right">
           <div class="current-model">当前模型: <strong>{{ currentModel }}</strong></div>
-          <el-button size="small" @click="showAdvancedSettings = true" style="margin-left: 10px;">高级设置</el-button>
         </div>
       </el-header>
 
@@ -188,6 +187,12 @@
           </div>
         </div>
       </el-main>
+
+      <div class="bottom-bar">
+        <el-button type="primary" size="large" class="advanced-settings-btn" @click="showAdvancedSettings = true">
+          高级设置
+        </el-button>
+      </div>
 
       <el-footer class="app-footer">
         <div class="footer-content">
@@ -657,4 +662,19 @@ code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff
 .tip-step { font-size: 15px; color: #303133; margin: 12px 0; line-height: 1.6; }
 .tip-countdown { font-size: 13px; color: #909399; text-align: center; margin-top: 16px; }
 .tip-countdown strong { color: #409eff; font-size: 18px; }
+
+.bottom-bar {
+  display: flex;
+  justify-content: center;
+  padding: 16px 20px 8px;
+  background: #f5f7fa;
+}
+.advanced-settings-btn {
+  font-size: 16px !important;
+  padding: 12px 36px !important;
+  font-weight: 600;
+  letter-spacing: 2px;
+  border-radius: 24px !important;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4) !important;
+}
 </style>
