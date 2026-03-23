@@ -366,11 +366,13 @@ const openProviderConfig = (key) => {
   showProviderConfig.value = true
 }
 
-const handleSaveProviderConfig = () => {
-  if (!providerConfigForm.providerId || !providerConfigForm.baseUrl) {
-    ElMessage.warning('请填写完整的Provider ID和Base URL')
+const handleSaveProviderConfig = async () => {
+  if (!providerConfigForm.providerId || !providerConfigForm.baseUrl || !providerConfigForm.apiKey) {
+    ElMessage.warning('请填写完整的配置信息')
     return
   }
+
+  // 保存到 localStorage
   saveProviderConfigToStorage(currentConfigProviderKey.value, {
     providerId: providerConfigForm.providerId,
     baseUrl: providerConfigForm.baseUrl,
@@ -378,8 +380,20 @@ const handleSaveProviderConfig = () => {
     contextWindow: providerConfigForm.contextWindow,
     maxTokens: providerConfigForm.maxTokens
   })
+
+  // 同步到后端
+  try {
+    await axios.post(`${API_BASE}/provider/apikey`, {
+      providerId: providerConfigForm.providerId,
+      apiKey: providerConfigForm.apiKey
+    })
+  } catch (error) {
+    console.error('更新后端 API Key 失败:', error)
+    ElMessage.warning('API Key 已保存到浏览器，但后端更新失败，可能影响模型切换')
+  }
+
   showProviderConfig.value = false
-  ElMessage.success('提供商配置已保存')
+  ElMessage.success('配置已保存')
 }
 
 const loadConfig = async () => {
