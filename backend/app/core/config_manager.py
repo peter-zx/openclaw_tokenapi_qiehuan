@@ -168,7 +168,8 @@ class ConfigManager:
     def _infer_api_type(self, base_url: str, provider_id: str) -> str:
         """根据 baseUrl 推断 API 类型"""
         url = (base_url or "").lower()
-        if "/v3" in url or "/responses" in url:
+        pid = (provider_id or "").lower()
+        if "/v3" in url or "/responses" in url or "volcengine" in url or "volcengine" in pid:
             return "openai-responses"
         return "openai-completions"
 
@@ -186,6 +187,11 @@ class ConfigManager:
                 provider["api"] = api_type
                 changed = True
                 fixes.append(f"{provider_id}: 补全缺失的 api={api_type}")
+            elif provider.get("api") != api_type:
+                old = provider["api"]
+                provider["api"] = api_type
+                changed = True
+                fixes.append(f"{provider_id}: 修正 api {old} -> {api_type}")
 
             for model in provider.get("models", []):
                 needed = {"reasoning", "input", "cost", "contextWindow", "maxTokens"}
