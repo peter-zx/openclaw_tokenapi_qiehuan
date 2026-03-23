@@ -58,6 +58,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 
 const PRESET_MAP = {
   'ali': { name: '阿里云', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', providerId: 'ali-dashscope' },
@@ -67,6 +68,8 @@ const PRESET_MAP = {
   'openai': { name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', providerId: 'openai-official' },
   'minimax': { name: 'MiniMax', baseUrl: 'https://api.minimax.chat/v1', providerId: 'minimax' },
 }
+
+const API_BASE = 'http://127.0.0.1:9131/api'
 
 const props = defineProps({
   visible: Boolean,
@@ -85,19 +88,33 @@ const form = ref({
 })
 
 const providerName = ref('')
+const loading = ref(false)
 
-watch(() => props.visible, (newVal) => {
+watch(() => props.visible, async (newVal) => {
   if (!newVal) return
+
   const preset = PRESET_MAP[props.providerKey]
   const stored = props.storedConfig || {}
 
+  let backendConfig = null
+  if (preset) {
+    try {
+      loading.value = true
+      const resp = await axios.get(`${API_BASE}/provider/${preset.providerId}`)
+      backendConfig = resp.data
+    } catch {
+    } finally {
+      loading.value = false
+    }
+  }
+
   if (preset) {
     form.value = {
-      providerId: stored.providerId || preset.providerId,
-      baseUrl: stored.baseUrl || preset.baseUrl,
-      apiKey: stored.apiKey || '',
-      contextWindow: stored.contextWindow || 64000,
-      maxTokens: stored.maxTokens || 8000
+      providerId: backendConfig?.providerId || stored.providerId || preset.providerId,
+      baseUrl: backendConfig?.baseUrl || stored.baseUrl || preset.baseUrl,
+      apiKey: backendConfig?.apiKey || stored.apiKey || '',
+      contextWindow: backendConfig?.contextWindow || stored.contextWindow || 64000,
+      maxTokens: backendConfig?.maxTokens || stored.maxTokens || 8000
     }
   } else {
     form.value = {
