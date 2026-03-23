@@ -9,11 +9,20 @@ import os
 from models import ModelSwitchRequest, GatewayControlRequest
 from config_manager import ConfigManager
 from gateway_controller import GatewayController
+from secure_config import SecureConfig
 
 
 class UpdateApiKeyRequest(BaseModel):
     providerId: str
     apiKey: str
+
+
+class ProviderConfigRequest(BaseModel):
+    providerId: str
+    baseUrl: str
+    apiKey: str
+    contextWindow: int = 64000
+    maxTokens: int = 8000
 
 
 class ProviderResponse(BaseModel):
@@ -40,6 +49,7 @@ app.add_middleware(
 # 初始化管理器
 config_manager = ConfigManager()
 gateway_controller = GatewayController()
+secure_config = SecureConfig()
 
 # 静态文件目录
 frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
