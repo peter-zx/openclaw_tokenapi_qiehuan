@@ -80,6 +80,7 @@ class ConfigManager:
                 providers[provider_id] = {
                     "baseUrl": base_url or "",
                     "apiKey": "",
+                    "api": self._infer_api_type(base_url, provider_id),
                     "models": [{"id": model_id, "name": model_id}],
                 }
             else:
@@ -131,13 +132,15 @@ class ConfigManager:
             if "providers" not in self.config["models"]:
                 self.config["models"]["providers"] = {}
 
+            api_type = self._infer_api_type(base_url, provider_id)
+
             providers = self.config["models"]["providers"]
 
             if provider_id not in providers:
                 providers[provider_id] = {
                     "baseUrl": base_url or "",
                     "apiKey": api_key or "",
-                    "api": "openai-completions",
+                    "api": api_type,
                     "models": [],
                 }
             else:
@@ -146,11 +149,22 @@ class ConfigManager:
                     provider["baseUrl"] = base_url
                 if api_key:
                     provider["apiKey"] = api_key
+                if "api" not in provider:
+                    provider["api"] = api_type
 
             return self._save_config()
         except Exception as e:
             print(f"更新提供商配置失败: {e}")
             return False
+
+    def _infer_api_type(self, base_url: str, provider_id: str) -> str:
+        """根据 baseUrl 推断 API 类型"""
+        url = (base_url or "").lower()
+        if "/v3" in url or "/responses" in url:
+            return "openai-responses"
+        if "/v1" in url:
+            return "openai-chat"
+        return "openai-completions"
 
     def switch_model_only(self, provider_id: str, model_id: str) -> bool:
         """只切换模型（不保存到通讯录）"""
