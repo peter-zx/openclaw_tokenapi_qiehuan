@@ -1,3 +1,4 @@
+import os
 import subprocess
 import time
 import sys
@@ -45,7 +46,9 @@ class GatewayController:
     def start_gateway() -> Tuple[bool, str]:
         """启动 OpenClaw Gateway"""
         GatewayController._log("Starting Gateway...")
-        gateway_cmd = r"C:\Users\Administrator\.openclaw\gateway.cmd"
+        # 使用用户主目录，跨平台兼容
+        openclaw_home = os.path.join(os.path.expanduser("~"), ".openclaw")
+        gateway_cmd = os.path.join(openclaw_home, "gateway.cmd")
 
         try:
             startupinfo = subprocess.STARTUPINFO()
@@ -55,7 +58,7 @@ class GatewayController:
                 f'"{gateway_cmd}"',
                 shell=True,
                 startupinfo=startupinfo,
-                cwd=r"C:\Users\Administrator\.openclaw"
+                cwd=openclaw_home
             )
             GatewayController._log("Gateway started")
             return True, "Gateway 服务已启动"
@@ -76,7 +79,9 @@ class GatewayController:
         """使用指定命令重启 Gateway: 调用脚本打开新 PowerShell 窗口"""
         GatewayController._log("=== Restarting Gateway with new PowerShell ===")
 
-        script_path = r"C:\Users\Administrator\Desktop\0319\tools\restart_gateway.bat"
+        # 使用项目根目录的相对路径
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        script_path = os.path.join(project_root, "tools", "restart_gateway.bat")
 
         try:
             subprocess.Popen([script_path], shell=True)

@@ -6,7 +6,10 @@ from typing import Dict, List, Optional
 class ConfigManager:
     """配置文件管理器"""
 
-    def __init__(self, config_path: str = "C:\\Users\\Administrator\\.openclaw\\openclaw.json"):
+    def __init__(self, config_path: str = None):
+        # 使用用户主目录，跨平台兼容
+        if config_path is None:
+            config_path = os.path.join(os.path.expanduser("~"), ".openclaw", "openclaw.json")
         self.config_path = config_path
         self.config = self._load_config()
 
@@ -49,7 +52,7 @@ class ConfigManager:
         return self.config.get('models', {}).get('providers', {})
 
     def save_provider(self, provider_id: str, base_url: str, api_key: str, model_id: str) -> bool:
-        """保存提供商配置（apiKey不保存到JSON文件）"""
+        """保存提供商配置（同时更新 openclaw.json 和 auth-profiles.json）"""
         try:
             if 'models' not in self.config:
                 self.config['models'] = {}
@@ -84,7 +87,14 @@ class ConfigManager:
                     })
                     provider['models'] = models
 
-            return self._save_config()
+            # 保存配置
+            saved = self._save_config()
+
+            # 如果提供了 API Key，同时更新认证文件
+            if api_key:
+                self.update_provider_apikey(provider_id, api_key)
+
+            return saved
         except Exception as e:
             print(f"保存提供商配置失败: {e}")
             return False
@@ -165,14 +175,42 @@ class ConfigManager:
             return False
 
     def update_provider_apikey(self, provider_id: str, api_key: str) -> bool:
-        """更新提供商的 API Key"""
+        """更新提供商的 API Key（同时更新 openclaw.json 和 auth-profiles.json）"""
         try:
+            # 1. 更新 openclaw.json 中的 apiKey
             providers = self.config.get('models', {}).get('providers', {})
             if provider_id not in providers:
                 return False
 
             providers[provider_id]['apiKey'] = api_key
-            return self._save_config()
+            openclaw_saved = self._save_config()
+
+            # 2. 更新 auth-profiles.json（OpenClaw 认证文件）
+            auth_profiles_path = os.path.join(os.path.expanduser("~"), ".openclaw", "agents", "main", "agent", "auth-profiles.json")
+
+            if os.path.exists(auth_profiles_path):
+                with open(auth_profiles_path, 'r', encoding='utf-8') as f:
+                    auth_config = json.load(f)
+
+                # 创建或更新该 provider 的认证配置
+                profile_id = f"{provider_id}:manual"
+                if 'profiles' not in auth_config:
+                    auth_config['profiles'] = {}
+
+                auth_config['profiles'][profile_id] = {
+                    'type': 'token',
+                    'provider': provider_id,
+                    'token': api_key
+                }
+
+                with open(auth_profiles_path, 'w', encoding='utf-8') as f:
+                    json.dump(auth_config, f, indent=2, ensure_ascii=False)
+
+                print(f"[ConfigManager] 已更新 auth-profiles.json: {profile_id}")
+            else:
+                print(f"[ConfigManager] 警告: auth-profiles.json 不存在: {auth_profiles_path}")
+
+            return openclaw_saved
         except Exception as e:
             print(f"更新 API Key 失败: {e}")
             return False

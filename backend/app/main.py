@@ -27,11 +27,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 静态文件目录（使用绝对路径）
+# app/main.py 的父目录是 backend，再上一级是项目根目录
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# 获取项目根目录（backend 的上一级）
+project_root = os.path.dirname(backend_dir)
+frontend_dist = os.path.join(project_root, "frontend", "dist")
+
 # 注册路由
 app.include_router(router, prefix="/api")
 
-# 静态文件目录
-frontend_dist = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
+# 挂载静态文件（在模块级别，而非 if __name__）
+if os.path.exists(frontend_dist):
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 
 @app.get("/")
@@ -86,10 +96,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-
-    if os.path.exists(frontend_dist):
-        assets_dir = os.path.join(frontend_dist, "assets")
-        if os.path.exists(assets_dir):
-            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
     uvicorn.run(app, host="127.0.0.1", port=9131, log_level="info")

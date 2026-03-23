@@ -111,7 +111,7 @@ async def root():
                 <h3>构建步骤：</h3>
                 <ol>
                     <li>打开命令行终端</li>
-                    <li>切换到项目目录：<code>cd "c:/Users/Administrator/Desktop/0319"</code></li>
+                    <li>切换到项目目录：<code>cd "项目路径"</code></li>
                     <li>安装依赖：<div class="code">cd frontend && npm install</div></li>
                     <li>构建前端：<div class="code">npm run build</div></li>
                     <li>重新启动服务</li>

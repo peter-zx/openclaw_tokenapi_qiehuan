@@ -1,4 +1,10 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-python-multipart==0.0.6
+# FastAPI 核心依赖
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+
+# Windows 兼容性和进程管理
+pywin32>=305
+psutil>=5.9.0

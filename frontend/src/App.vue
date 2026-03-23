@@ -76,7 +76,7 @@
               <div class="model-input-section" v-if="selectedProvider">
                 <div class="selected-provider-info">
                   已选择: <strong>{{ currentProviderName }}</strong>
-                  <span v-if="getStoredProviderConfig().baseUrl" class="config-hint">（已配置）</span>
+                  <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
                   <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
                 </div>
                 <el-input
@@ -322,9 +322,13 @@ const currentConfigProviderName = computed(() => {
 
 const canSave = computed(() => {
   if (!selectedProvider.value || !modelIdInput.value) return false
-  const config = getStoredProviderConfig(selectedProvider.value)
-  return !!(config.baseUrl && config.providerId)
+  return isProviderConfigured()
 })
+
+const isProviderConfigured = () => {
+  const config = getStoredProviderConfig(selectedProvider.value)
+  return !!(config.baseUrl && config.providerId && config.apiKey)
+}
 
 // 过滤后的卡片
 const filteredCards = computed(() => {
