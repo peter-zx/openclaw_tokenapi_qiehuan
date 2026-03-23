@@ -3,9 +3,20 @@ cd /d "%~dp0"
 chcp 65001 >nul
 title OpenClaw Model Switcher
 
-setlocal enabledelayedexpansion
+REM Helper function to check Node.js
+:check_nodejs
+node --version >nul 2>&1
+if errorlevel 1 (
+    echo  [ERROR] Node.js not found!
+    echo  Please install Node.js: https://nodejs.org/
+    pause
+    exit /b 1
+)
+echo  [OK] Node.js detected
+exit /b 0
 
-set "CURRENT_VERSION=1.0.0"
+setlocal enabledelayedexpansion
+set "CURRENT_VERSION=1.1.0"
 set "REPO_OWNER=peter-zx"
 set "REPO_NAME=openclaw_tokenapi_qiehuan"
 set "REPO_URL=https://github.com/%REPO_OWNER%/%REPO_NAME%"
@@ -17,8 +28,7 @@ echo   OpenClaw Model Switcher v%CURRENT_VERSION%
 echo ========================================
 echo.
 
-echo  [Step 1/6] Checking Python environment...
-
+echo  [Step 1/7] Checking Python environment...
 python --version >nul 2>&1
 if errorlevel 1 (
     echo  [ERROR] Python not found!
@@ -29,8 +39,7 @@ if errorlevel 1 (
 echo  [OK] Python detected
 
 echo.
-echo  [Step 2/6] Checking for updates...
-
+echo  [Step 2/7] Checking for updates...
 powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri '%API_URL%' -UseBasicParsing -TimeoutSec 10; $j = $r.Content | ConvertFrom-Json; Write-Host ('LATEST:' + $j.tag_name) } catch { Write-Host 'ERROR' }" > "%TEMP%\gh_ver.tmp" 2>nul
 
 set "LATEST_TAG="
@@ -53,7 +62,7 @@ if "!LATEST_TAG!"=="ERROR" (
 )
 
 echo.
-echo  [Step 3/6] Setting up virtual environment...
+echo  [Step 3/7] Setting up virtual environment...
 if not exist "venv\Scripts\python.exe" (
     echo  [INFO] Creating venv...
     python -m venv venv
@@ -61,12 +70,37 @@ if not exist "venv\Scripts\python.exe" (
 echo  [OK] Virtual environment ready
 
 echo.
-echo  [Step 4/6] Activating virtual environment...
+echo  [Step 4/7] Activating virtual environment...
 call venv\Scripts\activate.bat
 echo  [OK] Virtual environment activated
 
 echo.
-echo  [Step 5/6] Checking dependencies...
+echo  [Step 5/7] Checking frontend build...
+if not exist "frontend\dist\index.html" (
+    echo  [INFO] Frontend not built, installing dependencies...
+    call :check_nodejs || exit /b 1
+    cd frontend
+    call npm install
+    if errorlevel 1 (
+        echo  [ERROR] npm install failed
+        pause
+        exit /b 1
+    )
+    echo  [INFO] Building frontend...
+    call npm run build
+    if errorlevel 1 (
+        echo  [ERROR] npm build failed
+        pause
+        exit /b 1
+    )
+    cd ..
+    echo  [OK] Frontend built
+) else (
+    echo  [OK] Frontend already built
+)
+
+echo.
+echo  [Step 6/7] Checking dependencies...
 pip show fastapi >nul 2>&1
 if errorlevel 1 (
     echo  [INFO] Installing dependencies...
@@ -75,7 +109,7 @@ if errorlevel 1 (
 echo  [OK] Dependencies ready
 
 echo.
-echo  [Step 6/6] Starting service...
+echo  [Step 7/7] Starting service...
 
 if not exist "backend\start.py" (
     echo  [ERROR] backend\start.py not found
