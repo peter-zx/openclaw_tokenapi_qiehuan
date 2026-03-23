@@ -104,6 +104,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
 const API_BASE = 'http://127.0.0.1:9131/api'
@@ -156,7 +157,8 @@ const loadSettings = async () => {
       toolsProfile: data.toolsProfile || defaults.toolsProfile,
       dmScope: data.dmScope || defaults.dmScope
     }
-  } catch {
+  } catch (e) {
+    ElMessage.warning('加载高级设置失败，使用默认值')
     Object.assign(form.value, defaults)
   } finally {
     loading.value = false
@@ -166,11 +168,12 @@ const loadSettings = async () => {
 const handleSave = async () => {
   saving.value = true
   try {
-    await axios.put(`${API_BASE}/settings`, form.value)
+    const resp = await axios.put(`${API_BASE}/settings`, form.value)
+    ElMessage.success(resp.data.message || '保存成功')
     visible.value = false
     emit('saved')
   } catch (e) {
-    console.error('保存失败', e)
+    ElMessage.error('保存失败: ' + (e.response?.data?.detail || e.message))
   } finally {
     saving.value = false
   }

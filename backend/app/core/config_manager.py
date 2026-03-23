@@ -336,25 +336,18 @@ class ConfigManager:
     def update_advanced_settings(self, settings: Dict) -> bool:
         """更新高级设置"""
         try:
-            if "tools" not in self.config:
-                self.config["tools"] = {}
-            if "exec" not in self.config["tools"]:
-                self.config["tools"]["exec"] = {}
-            self.config["tools"]["exec"]["host"] = settings.get("execHost", "gateway")
-            self.config["tools"]["profile"] = settings.get("toolsProfile", "full")
+            tools = self.config.setdefault("tools", {})
+            exec_conf = tools.setdefault("exec", {})
+            exec_conf["host"] = settings.get("execHost", "gateway")
+            tools["profile"] = settings.get("toolsProfile", "full")
 
-            if "agents" not in self.config:
-                self.config["agents"] = {}
-            if "defaults" not in self.config["agents"]:
-                self.config["agents"]["defaults"] = {}
-
-            agents_defaults = self.config["agents"]["defaults"]
+            agents = self.config.setdefault("agents", {})
+            agents_defaults = agents.setdefault("defaults", {})
             agents_defaults.setdefault("sandbox", {})["mode"] = settings.get("sandboxMode", "off")
             agents_defaults.setdefault("compaction", {})["mode"] = settings.get("compactionMode", "safeguard")
 
-            if "session" not in self.config:
-                self.config["session"] = {}
-            self.config["session"]["dmScope"] = settings.get("dmScope", "per-channel-peer")
+            session = self.config.setdefault("session", {})
+            session["dmScope"] = settings.get("dmScope", "per-channel-peer")
 
             return self._save_config()
         except Exception as e:
