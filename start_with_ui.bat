@@ -99,8 +99,8 @@ echo.
 echo  [Step 6/7] Checking dependencies...
 pip show fastapi >nul 2>&1
 if errorlevel 1 (
-    echo  [INFO] Installing dependencies...
-    pip install -r backend\requirements.txt
+    echo  [INFO] Installing dependencies from Tsinghua mirror...
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r backend\requirements.txt
 )
 echo  [OK] Dependencies ready
 

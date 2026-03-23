@@ -8,3 +8,5 @@ python-multipart>=0.0.6
 # Windows compatibility and process management
 pywin32>=305
 psutil>=5.9.0
+
+# -i https://pypi.tuna.tsinghua.edu.cn/simple
