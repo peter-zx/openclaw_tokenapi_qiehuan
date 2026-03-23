@@ -3,20 +3,9 @@ cd /d "%~dp0"
 chcp 65001 >nul
 title OpenClaw Model Switcher
 
-REM Helper function to check Node.js
-:check_nodejs
-node --version >nul 2>&1
-if errorlevel 1 (
-    echo  [ERROR] Node.js not found!
-    echo  Please install Node.js: https://nodejs.org/
-    pause
-    exit /b 1
-)
-echo  [OK] Node.js detected
-exit /b 0
-
 setlocal enabledelayedexpansion
-set "CURRENT_VERSION=1.1.0"
+
+set "CURRENT_VERSION=1.2.0"
 set "REPO_OWNER=peter-zx"
 set "REPO_NAME=openclaw_tokenapi_qiehuan"
 set "REPO_URL=https://github.com/%REPO_OWNER%/%REPO_NAME%"
@@ -78,7 +67,14 @@ echo.
 echo  [Step 5/7] Checking frontend build...
 if not exist "frontend\dist\index.html" (
     echo  [INFO] Frontend not built, installing dependencies...
-    call :check_nodejs || exit /b 1
+    node --version >nul 2>&1
+    if errorlevel 1 (
+        echo  [ERROR] Node.js not found!
+        echo  Please install Node.js: https://nodejs.org/
+        pause
+        exit /b 1
+    )
+    echo  [OK] Node.js detected
     cd frontend
     call npm install
     if errorlevel 1 (
@@ -128,5 +124,5 @@ echo.
 
 start http://127.0.0.1:9131
 
-"venv\Scripts\python.exe" "backend\start.py"
+python backend\start.py
 pause
