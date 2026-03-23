@@ -71,6 +71,8 @@ class ConfigManager:
                 provider = providers[provider_id]
                 if base_url:
                     provider['baseUrl'] = base_url
+                if api_key:
+                    provider['apiKey'] = api_key
 
                 models = provider.get('models', [])
                 model_ids = [m['id'] for m in models]

@@ -25,7 +25,7 @@
 
       <el-divider />
 
-      <el-form-item label="上下文窗口">
+      <el-form-item label="contextWindow">
         <el-input-number
           v-model="form.contextWindow"
           :min="1000"
@@ -33,10 +33,10 @@
           :step="1000"
           placeholder="默认值: 64000"
         />
-        <span class="form-tip">范围: 1000 - 128000</span>
+        <span class="form-tip">范围: 1000 - 128000（上下文窗口）</span>
       </el-form-item>
 
-      <el-form-item label="最大输出长度">
+      <el-form-item label="maxTokens">
         <el-input-number
           v-model="form.maxTokens"
           :min="100"
@@ -44,7 +44,7 @@
           :step="100"
           placeholder="默认值: 8000"
         />
-        <span class="form-tip">范围: 100 - 32000</span>
+        <span class="form-tip">范围: 100 - 32000（最大输出长度）</span>
       </el-form-item>
     </el-form>
 
