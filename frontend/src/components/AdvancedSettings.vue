@@ -82,16 +82,17 @@
               <div class="field-group">
                 <div class="field-label">权限询问</div>
                 <el-radio-group v-model="form.execAsk" class="radio-pills-v">
-                  <el-radio value="allow">allow 直接放行</el-radio>
-                  <el-radio value="on-miss">on-miss 询问确认</el-radio>
-                  <el-radio value="deny">deny 直接拒绝</el-radio>
+                  <el-radio value="off">off 不询问，直接执行</el-radio>
+                  <el-radio value="on-miss">on-miss 未匹配时询问</el-radio>
+                  <el-radio value="always">always 始终询问</el-radio>
                 </el-radio-group>
               </div>
               <div class="field-group">
                 <div class="field-label">安全模式</div>
                 <el-radio-group v-model="form.execSecurity" class="radio-pills-v">
-                  <el-radio value="denylist">denylist 黑名单制</el-radio>
+                  <el-radio value="deny">deny 无限制，完全开放</el-radio>
                   <el-radio value="allowlist">allowlist 白名单制</el-radio>
+                  <el-radio value="full">full 完整权限</el-radio>
                 </el-radio-group>
               </div>
             </div>
@@ -206,8 +207,8 @@ const form = ref({
   denyElevated: false,
   denyShell: false,
   execHost: 'gateway',
-  execAsk: 'allow',
-  execSecurity: 'denylist',
+  execAsk: 'off',
+  execSecurity: 'deny',
   sandboxMode: 'off',
   compactionMode: 'safeguard',
   dmScope: 'per-channel-peer',

@@ -83,8 +83,8 @@ class AdvancedSettingsSchema(BaseModel):
     denyElevated: bool = False
     denyShell: bool = False
     execHost: str = "gateway"
-    execAsk: str = "allow"
-    execSecurity: str = "denylist"
+    execAsk: str = "always"
+    execSecurity: str = "deny"
     sandboxMode: str = "off"
     compactionMode: str = "safeguard"
     dmScope: str = "per-channel-peer"

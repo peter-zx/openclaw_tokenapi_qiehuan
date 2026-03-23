@@ -338,8 +338,8 @@ class ConfigManager:
             "denyElevated": "exec:elevated" in deny_list,
             "denyShell": "exec:shell" in deny_list,
             "execHost": exec_conf.get("host", "gateway"),
-            "execAsk": exec_conf.get("ask", "allow"),
-            "execSecurity": exec_conf.get("security", "denylist"),
+            "execAsk": exec_conf.get("ask", "off"),
+            "execSecurity": exec_conf.get("security", "deny"),
             "sandboxMode": agents.get("sandbox", {}).get("mode", "off"),
             "compactionMode": agents.get("compaction", {}).get("mode", "safeguard"),
             "dmScope": session.get("dmScope", "per-channel-peer"),
@@ -366,8 +366,8 @@ class ConfigManager:
             tools["deny"] = deny_list
 
             exec_conf["host"] = settings.get("execHost", "gateway")
-            exec_conf["ask"] = settings.get("execAsk", "allow")
-            exec_conf["security"] = settings.get("execSecurity", "denylist")
+            exec_conf["ask"] = settings.get("execAsk", "off")
+            exec_conf["security"] = settings.get("execSecurity", "deny")
             tools["profile"] = settings.get("toolsProfile", "full")
 
             web_conf = tools.setdefault("web", {})
