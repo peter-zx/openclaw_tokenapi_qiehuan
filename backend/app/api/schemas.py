@@ -72,3 +72,11 @@ class DeleteRequest(BaseModel):
 class ControlResponse(BaseModel):
     success: bool
     message: str
+
+
+class AdvancedSettingsSchema(BaseModel):
+    execHost: str = "gateway"
+    sandboxMode: str = "safeguard"
+    compactionMode: str = "safeguard"
+    toolsProfile: str = "full"
+    dmScope: str = "per-channel-peer"

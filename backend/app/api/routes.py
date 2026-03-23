@@ -11,6 +11,7 @@ from .schemas import (
     ControlResponse,
     ProviderConfigRequest,
     UpdateApiKeyRequest,
+    AdvancedSettingsSchema,
 )
 from ..core.config_manager import ConfigManager
 from ..core.gateway import GatewayController
@@ -232,4 +233,28 @@ async def update_provider_apikey(request: ProviderConfigRequest):
         raise
     except Exception as e:
         print(f"[API] Update Provider Config error: {str(e)}", flush=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/settings")
+async def get_advanced_settings():
+    """获取高级设置"""
+    try:
+        settings = config_manager.get_advanced_settings()
+        return settings
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/settings")
+async def update_advanced_settings(settings: AdvancedSettingsSchema):
+    """更新高级设置"""
+    try:
+        success = config_manager.update_advanced_settings(settings.model_dump())
+        if not success:
+            raise HTTPException(status_code=500, detail="保存高级设置失败")
+        return {"success": True, "message": "高级设置已保存"}
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

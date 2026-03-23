@@ -15,6 +15,7 @@
         </div>
         <div class="header-right">
           <div class="current-model">当前模型: <strong>{{ currentModel }}</strong></div>
+          <el-button size="small" @click="showAdvancedSettings = true" style="margin-left: 10px;">高级设置</el-button>
         </div>
       </el-header>
 
@@ -207,6 +208,12 @@
       @save="handleSaveProviderConfig"
     />
 
+    <!-- 高级设置弹窗 -->
+    <AdvancedSettings
+      v-model="showAdvancedSettings"
+      @saved="handleAdvancedSettingsSaved"
+    />
+
     <!-- 批量导入弹窗 -->
     <el-dialog v-model="showBatchImport" title="批量导入模型" width="500px">
       <div style="margin-bottom: 15px; color: #909399;">
@@ -263,6 +270,7 @@ import axios from 'axios'
 import { PRESET_PROVIDERS } from './stores/provider'
 import ModelCard from './components/ModelCard.vue'
 import SettingsDialog from './components/SettingsDialog.vue'
+import AdvancedSettings from './components/AdvancedSettings.vue'
 const qrcodeImage = '/qrcode.jpg'
 
 const API_BASE = 'http://127.0.0.1:9131/api'
@@ -282,6 +290,7 @@ const filterProvider = ref('')
 
 // 提供商配置弹窗
 const showProviderConfig = ref(false)
+const showAdvancedSettings = ref(false)
 const currentConfigProviderKey = ref('')
 const providerConfigForm = reactive({ providerId: '', baseUrl: '', apiKey: '', contextWindow: 64000, maxTokens: 8000 })
 
@@ -546,6 +555,18 @@ const copyCode = async (code) => {
 
 const copyRestartCmd = async () => {
   await copyCode('Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 8; openclaw gateway')
+}
+
+const handleAdvancedSettingsSaved = () => {
+  countdown.value = 5
+  showSwitchTip.value = true
+  const timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+      showSwitchTip.value = false
+    }
+  }, 1000)
 }
 
 const handleDeleteCard = async (card) => {

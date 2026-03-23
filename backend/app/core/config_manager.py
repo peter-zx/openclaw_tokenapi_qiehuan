@@ -319,6 +319,48 @@ class ConfigManager:
             print(f"更新 API Key 失败: {e}")
             return False
 
+    def get_advanced_settings(self) -> Dict:
+        """获取高级设置"""
+        tools = self.config.get("tools", {})
+        agents = self.config.get("agents", {}).get("defaults", {})
+        session = self.config.get("session", {})
+
+        return {
+            "execHost": tools.get("exec", {}).get("host", "gateway"),
+            "sandboxMode": agents.get("sandbox", {}).get("mode", "safeguard"),
+            "compactionMode": agents.get("compaction", {}).get("mode", "safeguard"),
+            "toolsProfile": tools.get("profile", "full"),
+            "dmScope": session.get("dmScope", "per-channel-peer"),
+        }
+
+    def update_advanced_settings(self, settings: Dict) -> bool:
+        """更新高级设置"""
+        try:
+            if "tools" not in self.config:
+                self.config["tools"] = {}
+            if "exec" not in self.config["tools"]:
+                self.config["tools"]["exec"] = {}
+            self.config["tools"]["exec"]["host"] = settings.get("execHost", "gateway")
+            self.config["tools"]["profile"] = settings.get("toolsProfile", "full")
+
+            if "agents" not in self.config:
+                self.config["agents"] = {}
+            if "defaults" not in self.config["agents"]:
+                self.config["agents"]["defaults"] = {}
+
+            agents_defaults = self.config["agents"]["defaults"]
+            agents_defaults.setdefault("sandbox", {})["mode"] = settings.get("sandboxMode", "safeguard")
+            agents_defaults.setdefault("compaction", {})["mode"] = settings.get("compactionMode", "safeguard")
+
+            if "session" not in self.config:
+                self.config["session"] = {}
+            self.config["session"]["dmScope"] = settings.get("dmScope", "per-channel-peer")
+
+            return self._save_config()
+        except Exception as e:
+            print(f"更新高级设置失败: {e}")
+            return False
+
     def update_auth_profile(self, provider_id: str, api_key: str) -> bool:
         """更新 auth-profiles.json（OpenClaw 认证文件）"""
         try:
