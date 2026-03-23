@@ -37,6 +37,19 @@ frontend_dist = os.path.join(project_root, "frontend", "dist")
 # 注册路由
 app.include_router(router, prefix="/api")
 
+
+@app.on_event("startup")
+async def startup_event():
+    """启动时自动检测并修复配置"""
+    from app.core.config_manager import ConfigManager
+    cm = ConfigManager()
+    fixes = cm.validate_and_fix()
+    if fixes:
+        print(f"[Startup] 配置修复: {', '.join(fixes)}")
+    else:
+        print("[Startup] 配置检查通过，无需修复")
+
+
 # 挂载静态文件（在模块级别，而非 if __name__）
 if os.path.exists(frontend_dist):
     assets_dir = os.path.join(frontend_dist, "assets")

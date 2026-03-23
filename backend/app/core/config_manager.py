@@ -174,6 +174,47 @@ class ConfigManager:
             return "openai-chat"
         return "openai-completions"
 
+    def validate_and_fix(self) -> list:
+        """启动时检测并修复所有 provider 配置，返回修复列表"""
+        fixes = []
+        providers = self.config.get("models", {}).get("providers", {})
+
+        for provider_id, provider in providers.items():
+            changed = False
+            base_url = provider.get("baseUrl", "")
+            api_type = self._infer_api_type(base_url, provider_id)
+
+            if "api" not in provider:
+                provider["api"] = api_type
+                changed = True
+                fixes.append(f"{provider_id}: 补全缺失的 api={api_type}")
+
+            for model in provider.get("models", []):
+                needed = {"reasoning", "input", "cost", "contextWindow", "maxTokens"}
+                missing = needed - set(model.keys())
+                if missing:
+                    if "reasoning" not in model:
+                        model["reasoning"] = False
+                    if "input" not in model:
+                        model["input"] = ["text"]
+                    if "cost" not in model:
+                        model["cost"] = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+                    if "contextWindow" not in model:
+                        model["contextWindow"] = 64000
+                    if "maxTokens" not in model:
+                        model["maxTokens"] = 8000
+                    changed = True
+                    fixes.append(f"{provider_id}/{model.get('id','?')}: 补全字段 {missing}")
+
+            if changed:
+                fixes.append(f"{provider_id}: 配置已修复")
+
+        if fixes:
+            self._save_config()
+
+        return fixes
+        return "openai-completions"
+
     def switch_model_only(self, provider_id: str, model_id: str) -> bool:
         """只切换模型（不保存到通讯录）"""
         try:

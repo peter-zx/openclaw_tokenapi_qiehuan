@@ -142,6 +142,16 @@ async def get_providers():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/config/validate")
+async def validate_config():
+    """手动检测并修复配置"""
+    try:
+        fixes = config_manager.validate_and_fix()
+        return {"success": True, "fixes": fixes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/provider/{provider_id}")
 async def get_provider_config(provider_id: str):
     """获取单个提供商的配置（从加密存储读取）"""
