@@ -568,13 +568,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .provider-config-btn { flex-shrink: 0; }
 .custom-row { border-top: 1px dashed #e4e7ed; padding-top: 15px; margin-top: 5px; }
 
-.model-input-card { margin-top: 15px; background: #f5f7fa; border-radius: 8px; padding: 16px; border: 1px solid #e4e7ed; }
-.selected-provider-info { margin-bottom: 10px; font-size: 14px; color: #606266; }
+.model-input-card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+.selected-provider-info { margin-bottom: 12px; font-size: 14px; color: #606266; }
 .selected-provider-info strong { color: #409eff; }
 .config-hint { margin-left: 8px; font-size: 12px; }
 .config-hint.warning { color: #e6a23c; }
-.input-actions { display: flex; gap: 10px; margin-top: 10px; }
-.loading-tip { margin-top: 8px; text-align: center; color: #909399; font-size: 14px; animation: pulse 1.5s infinite; }
+.input-actions { display: flex; gap: 10px; margin-top: 12px; }
+.loading-tip { margin-top: 10px; text-align: center; color: #909399; font-size: 14px; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 /* 重启服务说明 */
