@@ -123,6 +123,35 @@ class ConfigManager:
             print(f"保存提供商配置失败: {e}")
             return False
 
+    def update_provider_config(self, provider_id: str, base_url: str, api_key: str, context_window: int = 64000, max_tokens: int = 8000) -> bool:
+        """只更新提供商的配置信息，不添加模型（更新 openclaw.json）"""
+        try:
+            if "models" not in self.config:
+                self.config["models"] = {}
+            if "providers" not in self.config["models"]:
+                self.config["models"]["providers"] = {}
+
+            providers = self.config["models"]["providers"]
+
+            if provider_id not in providers:
+                providers[provider_id] = {
+                    "baseUrl": base_url or "",
+                    "apiKey": api_key or "",
+                    "api": "openai-completions",
+                    "models": [],
+                }
+            else:
+                provider = providers[provider_id]
+                if base_url:
+                    provider["baseUrl"] = base_url
+                if api_key:
+                    provider["apiKey"] = api_key
+
+            return self._save_config()
+        except Exception as e:
+            print(f"更新提供商配置失败: {e}")
+            return False
+
     def switch_model_only(self, provider_id: str, model_id: str) -> bool:
         """只切换模型（不保存到通讯录）"""
         try:

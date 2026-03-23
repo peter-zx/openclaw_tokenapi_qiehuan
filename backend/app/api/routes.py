@@ -203,6 +203,14 @@ async def update_provider_apikey(request: ProviderConfigRequest):
             },
         )
 
+        config_manager.update_provider_config(
+            request.providerId,
+            request.baseUrl,
+            request.apiKey,
+            request.contextWindow,
+            request.maxTokens
+        )
+
         config_manager.update_auth_profile(request.providerId, request.apiKey)
 
         return SwitchResponse(
