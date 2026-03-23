@@ -201,7 +201,7 @@ class ConfigManager:
         return cards
 
     def delete_model(self, provider_id: str, model_id: str) -> bool:
-        """删除单个模型"""
+        """删除单个模型（清理 providers 和 agents.defaults.models）"""
         try:
             providers = self.config.get("models", {}).get("providers", {})
             if provider_id not in providers:
@@ -210,6 +210,16 @@ class ConfigManager:
             provider = providers[provider_id]
             models = provider.get("models", [])
             provider["models"] = [m for m in models if m.get("id") != model_id]
+
+            model_key = f"{provider_id}/{model_id}"
+
+            agents_defaults = self.config.get("agents", {}).get("defaults", {})
+            agents_models = agents_defaults.get("models", {})
+            if model_key in agents_models:
+                del agents_models[model_key]
+
+            if agents_defaults.get("model", {}).get("primary") == model_key:
+                agents_defaults["model"]["primary"] = ""
 
             return self._save_config()
         except Exception as e:
