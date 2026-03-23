@@ -59,10 +59,19 @@
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
+const PRESET_MAP = {
+  'ali': { name: '阿里云', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', providerId: 'ali-dashscope' },
+  'volcengine': { name: '火山引擎', baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', providerId: 'volcengine-ark' },
+  'kimi': { name: 'Kimi', baseUrl: 'https://api.moonshot.cn/v1', providerId: 'kimi-moonshot' },
+  'deepseek': { name: 'DeepSeek', baseUrl: 'https://api.deepseek.com', providerId: 'deepseek-api' },
+  'openai': { name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', providerId: 'openai-official' },
+  'minimax': { name: 'MiniMax', baseUrl: 'https://api.minimax.chat/v1', providerId: 'minimax' },
+}
+
 const props = defineProps({
   visible: Boolean,
   providerKey: String,
-  config: Object
+  storedConfig: Object
 })
 
 const emit = defineEmits(['update:visible', 'save'])
@@ -78,33 +87,36 @@ const form = ref({
 const providerName = ref('')
 
 watch(() => props.visible, (newVal) => {
-  if (newVal && props.config) {
+  if (!newVal) return
+  const preset = PRESET_MAP[props.providerKey]
+  const stored = props.storedConfig || {}
+
+  if (preset) {
     form.value = {
-      providerId: props.config.providerId || '',
-      baseUrl: props.config.baseUrl || '',
-      apiKey: props.config.apiKey || '',
-      contextWindow: props.config.contextWindow || 64000,
-      maxTokens: props.config.maxTokens || 8000
+      providerId: stored.providerId || preset.providerId,
+      baseUrl: stored.baseUrl || preset.baseUrl,
+      apiKey: stored.apiKey || '',
+      contextWindow: stored.contextWindow || 64000,
+      maxTokens: stored.maxTokens || 8000
+    }
+  } else {
+    form.value = {
+      providerId: stored.providerId || '',
+      baseUrl: stored.baseUrl || '',
+      apiKey: stored.apiKey || '',
+      contextWindow: stored.contextWindow || 64000,
+      maxTokens: stored.maxTokens || 8000
     }
   }
 })
 
 watch(() => props.providerKey, (newVal) => {
-  const names = {
-    'ali': '阿里云',
-    'volcengine': '火山引擎',
-    'kimi': 'Kimi',
-    'deepseek': 'DeepSeek',
-    'openai': 'OpenAI',
-    'minimax': 'MiniMax',
-    'custom': '自定义'
+  if (PRESET_MAP[newVal]) {
+    providerName.value = PRESET_MAP[newVal].name
+  } else {
+    providerName.value = newVal === 'custom' ? '自定义' : (newVal || '未知')
   }
-  providerName.value = names[newVal] || '未知'
-})
-
-const handleClose = () => {
-  emit('update:visible', false)
-}
+}, { immediate: true })
 
 const handleSave = () => {
   if (!form.value.providerId || !form.value.baseUrl || !form.value.apiKey) {

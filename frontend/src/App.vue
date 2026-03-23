@@ -207,6 +207,7 @@
     <SettingsDialog
       v-model:visible="showProviderConfig"
       :provider-key="currentConfigProviderKey"
+      :stored-config="providerConfigForm"
       @save="handleSaveProviderConfig"
     />
 
@@ -323,7 +324,7 @@ const canSave = computed(() => {
 
 const isProviderConfigured = () => {
   const config = getStoredProviderConfig(selectedProvider.value)
-  return !!(config.baseUrl && config.providerId && config.apiKey)
+  return !!config.apiKey
 }
 
 // 过滤后的卡片
