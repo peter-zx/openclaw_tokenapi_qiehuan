@@ -167,10 +167,6 @@ class ConfigManager:
 
     def _infer_api_type(self, base_url: str, provider_id: str) -> str:
         """根据 baseUrl 推断 API 类型"""
-        url = (base_url or "").lower()
-        pid = (provider_id or "").lower()
-        if "/v3" in url or "/responses" in url or "volcengine" in url or "volcengine" in pid:
-            return "openai-responses"
         return "openai-completions"
 
     def validate_and_fix(self) -> list:
