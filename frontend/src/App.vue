@@ -72,48 +72,7 @@
                 </div>
               </div>
 
-              <!-- 模型ID输入框 -->
-              <div class="model-input-section" v-if="selectedProvider">
-                <div class="selected-provider-info">
-                  已选择: <strong>{{ currentProviderName }}</strong>
-                  <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
-                  <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
-                </div>
-                <el-input
-                  v-model="modelIdInput"
-                  placeholder="输入模型ID，例如: deepseek-v3"
-                  size="large"
-                  @keyup.enter="handleSave"
-                >
-                  <template #append>
-                    <el-button @click="handleOpenBatchImport" :icon="DocumentAdd" />
-                  </template>
-                </el-input>
 
-                <div class="button-group">
-                  <el-button
-                    type="success"
-                    @click="handleSave"
-                    :loading="saving"
-                    size="large"
-                    :disabled="!canSave"
-                  >
-                    {{ saving ? '保存中...' : '保存到通讯录' }}
-                  </el-button>
-                  <el-button
-                    type="primary"
-                    @click="handleSubmit"
-                    :loading="applying"
-                    size="large"
-                    :disabled="!canSave"
-                  >
-                    {{ applying ? '应用中...' : '保存并应用' }}
-                  </el-button>
-                </div>
-
-                <div v-if="saving" class="loading-tip">正在保存到通讯录...</div>
-                <div v-if="applying" class="loading-tip applying">正在保存并应用配置...</div>
-              </div>
             </div>
 
             <!-- 运维指令 -->
@@ -157,7 +116,10 @@
           <!-- 右侧：卡片列表 -->
           <div class="right-panel">
             <div class="cards-header">
-              <h3>已保存的模型 ({{ filteredCards.length }})</h3>
+              <div class="cards-header-top">
+                <h3>已保存的模型 ({{ filteredCards.length }})</h3>
+                <el-button @click="loadConfig" size="small" :loading="loading">刷新</el-button>
+              </div>
               <div class="filter-buttons">
                 <el-button
                   size="small"
@@ -173,6 +135,9 @@
                 >
                   {{ preset.name }}
                 </el-button>
+              </div>
+              <div class="tip-box">
+                <span class="tip-text">💡 提示：修改配置文件后，点击刷新按钮同步最新数据。切换模型后 OpenClaw 会自动重启。</span>
               </div>
             </div>
 
@@ -212,37 +177,13 @@
     />
 
     <!-- 批量导入弹窗 -->
-    <el-dialog v-model="showBatchImport" title="批量导入模型" width="500px">
-      <div style="margin-bottom: 15px; color: #909399;">
-        当前提供商：{{ currentProviderName }}
-      </div>
-      <el-tabs v-model="batchImportTab">
-        <el-tab-pane label="在线输入" name="input">
-          <el-input type="textarea" v-model="batchInputText" :rows="8" placeholder="每行一个模型ID" />
-        </el-tab-pane>
-        <el-tab-pane label="文件导入" name="file">
-          <el-upload ref="uploadRef" :auto-upload="false" :limit="1" accept=".txt" :on-change="handleFileChange">
-            <template #trigger>
-              <el-button>选择 TXT 文件</el-button>
-            </template>
-          </el-upload>
-        </el-tab-pane>
-        <el-tab-pane label="下载模板" name="template">
-          <el-button @click="downloadTemplate">下载模板文件</el-button>
-        </el-tab-pane>
-      </el-tabs>
-      <template #footer>
-        <el-button @click="showBatchImport = false">取消</el-button>
-        <el-button type="primary" @click="handleBatchImport" :loading="batchImporting">确认导入</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Setting, DocumentAdd } from '@element-plus/icons-vue'
+import { Setting } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { PRESET_PROVIDERS } from './stores/provider'
 import ModelCard from './components/ModelCard.vue'
@@ -252,19 +193,11 @@ const qrcodeImage = '/qrcode.jpg'
 const API_BASE = 'http://127.0.0.1:9131/api'
 
 const selectedProvider = ref('')
-const modelIdInput = ref('')
 const currentModel = ref('未设置')
 const modelCards = ref([])
+const loading = ref(false)
 const saving = ref(false)
 const applying = ref(false)
-
-// 批量导入
-const showBatchImport = ref(false)
-const batchImportTab = ref('input')
-const batchInputText = ref('')
-const batchImporting = ref(false)
-const uploadRef = ref(null)
-const selectedFile = ref(null)
 
 // 卡片筛选
 const filterProvider = ref('')
@@ -305,11 +238,7 @@ const saveProviderConfigToStorage = (key, config) => {
   localStorage.setItem(PROVIDER_CONFIG_KEY, JSON.stringify(configs))
 }
 
-const currentProviderName = computed(() => {
-  if (!selectedProvider.value) return ''
-  if (selectedProvider.value === 'custom') return getStoredProviderConfig('custom').providerId || '自定义'
-  return PRESET_PROVIDERS[selectedProvider.value]?.name || '未知'
-})
+
 
 const currentConfigProviderName = computed(() => {
   if (!currentConfigProviderKey.value) return ''
@@ -317,15 +246,7 @@ const currentConfigProviderName = computed(() => {
   return PRESET_PROVIDERS[currentConfigProviderKey.value]?.name || '未知'
 })
 
-const canSave = computed(() => {
-  if (!selectedProvider.value || !modelIdInput.value) return false
-  return isProviderConfigured()
-})
 
-const isProviderConfigured = () => {
-  const config = getStoredProviderConfig(selectedProvider.value)
-  return !!config.apiKey
-}
 
 // 过滤后的卡片
 const filteredCards = computed(() => {
@@ -336,8 +257,8 @@ const filteredCards = computed(() => {
   })
 })
 
-const handleSelectProvider = (key) => { selectedProvider.value = key; modelIdInput.value = '' }
-const handleSelectCustom = () => { selectedProvider.value = 'custom'; modelIdInput.value = '' }
+const handleSelectProvider = (key) => { selectedProvider.value = key }
+const handleSelectCustom = () => { selectedProvider.value = 'custom' }
 
 const openProviderConfig = (key) => {
   currentConfigProviderKey.value = key
@@ -391,52 +312,16 @@ const handleSaveProviderConfig = async (formData) => {
 }
 
 const loadConfig = async () => {
+  loading.value = true
   try {
     const response = await axios.get(`${API_BASE}/config`)
     currentModel.value = response.data.currentModel
     modelCards.value = response.data.modelCards
   } catch (error) { ElMessage.error('加载配置失败: ' + error.message) }
+  finally { loading.value = false }
 }
 
-const handleSave = async () => {
-  if (!canSave.value || !modelIdInput.value) { ElMessage.warning('请选择提供商并填写模型ID'); return }
-  saving.value = true
-  try {
-    const config = getStoredProviderConfig(selectedProvider.value)
-    const response = await axios.post(`${API_BASE}/save`, {
-      providerId: config.providerId,
-      baseUrl: config.baseUrl,
-      apiKey: config.apiKey,
-      modelId: modelIdInput.value,
-      contextWindow: config.contextWindow,
-      maxTokens: config.maxTokens
-    })
-    ElMessage.success(response.data.message)
-    modelIdInput.value = ''
-    await loadConfig()
-  } catch (error) { ElMessage.error('保存失败: ' + (error.response?.data?.detail || error.message)) }
-  finally { saving.value = false }
-}
 
-const handleSubmit = async () => {
-  if (!canSave.value || !modelIdInput.value) { ElMessage.warning('请选择提供商并填写模型ID'); return }
-  applying.value = true
-  try {
-    const config = getStoredProviderConfig(selectedProvider.value)
-    const response = await axios.post(`${API_BASE}/switch`, {
-      providerId: config.providerId,
-      baseUrl: config.baseUrl,
-      apiKey: config.apiKey,
-      modelId: modelIdInput.value,
-      contextWindow: config.contextWindow,
-      maxTokens: config.maxTokens
-    })
-    ElMessage.success({ message: '模型已切换，正在重启服务，请等待 8 秒...', duration: 5000 })
-    modelIdInput.value = ''
-    await loadConfig()
-  } catch (error) { ElMessage.error('切换失败: ' + (error.response?.data?.detail || error.message)) }
-  finally { applying.value = false }
-}
 
 const handleCardClick = async (card) => {
   applying.value = true
@@ -492,58 +377,6 @@ const handleDeleteCard = async (card) => {
   } catch (error) { if (error !== 'cancel') ElMessage.error('删除失败') }
 }
 
-const handleOpenBatchImport = () => {
-  if (!selectedProvider.value) { ElMessage.warning('请先选择提供商'); return }
-  showBatchImport.value = true
-}
-
-const downloadTemplate = () => {
-  const blob = new Blob([`# 模型ID列表\ndeepseek-v3\ngpt-4o\nqwen-plus`], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = 'model_import_template.txt'; a.click()
-  URL.revokeObjectURL(url)
-}
-
-const handleFileChange = (file) => { selectedFile.value = file.raw }
-
-const handleBatchImport = async () => {
-  let modelIds = []
-  if (batchImportTab.value === 'input') {
-    modelIds = batchInputText.value.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'))
-  } else if (batchImportTab.value === 'file') {
-    if (!selectedFile.value) { ElMessage.warning('请先选择文件'); return }
-    modelIds = await new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onload = (e) => resolve(e.target.result.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#')))
-      reader.readAsText(selectedFile.value)
-    })
-  }
-  if (modelIds.length === 0) { ElMessage.warning('未检测到有效模型ID'); return }
-  if (!canSave.value) { ElMessage.warning('请先选择并配置提供商'); return }
-  batchImporting.value = true
-  const config = getStoredProviderConfig(selectedProvider.value)
-  let successCount = 0, failCount = 0
-  for (const modelId of modelIds) {
-    try {
-      await axios.post(`${API_BASE}/save`, {
-        providerId: config.providerId,
-        baseUrl: config.baseUrl,
-        apiKey: config.apiKey,
-        modelId,
-        contextWindow: config.contextWindow,
-        maxTokens: config.maxTokens
-      })
-      successCount++
-    } catch { failCount++ }
-  }
-  batchImporting.value = false
-  showBatchImport.value = false
-  batchInputText.value = ''
-  ElMessage.success(`导入完成：成功 ${successCount}，失败 ${failCount}`)
-  await loadConfig()
-}
-
 onMounted(() => { loadConfig() })
 </script>
 
@@ -584,19 +417,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .provider-config-btn { flex-shrink: 0; }
 .custom-row { border-top: 1px dashed #e4e7ed; padding-top: 15px; margin-top: 5px; }
 
-.model-input-section { }
-.selected-provider-info { margin-bottom: 15px; font-size: 14px; color: #606266; }
-.selected-provider-info strong { color: #409eff; }
-.config-hint { margin-left: 10px; font-size: 12px; }
-.config-hint.warning { color: #e6a23c; }
-
-.button-group { display: flex; gap: 12px; margin-top: 15px; }
-.button-group .el-button { flex: 1; }
-
-.loading-tip { margin-top: 12px; text-align: center; color: #909399; font-size: 14px; animation: pulse 1.5s infinite; }
-.loading-tip.applying { color: #67c23a; font-weight: bold; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
 /* 重启服务说明 */
 .restart-guide { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
 .guide-steps { margin-bottom: 15px; }
@@ -614,8 +434,11 @@ code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff
 
 /* 卡片 */
 .cards-header { margin-bottom: 20px; }
-.cards-header h3 { font-size: 18px; color: #303133; margin-bottom: 15px; }
+.cards-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cards-header h3 { font-size: 18px; color: #303133; margin: 0; }
 .filter-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.tip-box { margin-top: 10px; padding: 8px 12px; background: #fdf6ec; border: 1px solid #f5dab1; border-radius: 6px; }
+.tip-text { font-size: 12px; color: #e6a23c; line-height: 1.5; }
 .empty-state { text-align: center; padding: 40px 0; }
 .model-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 </style>
