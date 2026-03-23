@@ -15,7 +15,7 @@ echo   OpenClaw Model Switcher v%CURRENT_VERSION%
 echo ========================================
 echo.
 
-echo  [Step 1/6] Checking Python environment...
+echo  [Step 1/7] Checking Python environment...
 python --version >nul 2>&1
 if errorlevel 1 (
     echo  [ERROR] Python not found!
@@ -26,7 +26,7 @@ if errorlevel 1 (
 echo  [OK] Python detected
 
 echo.
-echo  [Step 2/6] Checking for updates...
+echo  [Step 2/7] Checking for updates...
 powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri '%API_URL%' -UseBasicParsing -TimeoutSec 10; $j = $r.Content | ConvertFrom-Json; Write-Host ('LATEST:' + $j.tag_name) } catch { Write-Host 'ERROR' }" > "%TEMP%\gh_ver.tmp" 2>nul
 
 set "LATEST_TAG="
@@ -49,7 +49,25 @@ if "!LATEST_TAG!"=="ERROR" (
 )
 
 echo.
-echo  [Step 3/6] Checking frontend build...
+echo  [Step 3/7] Setting up virtual environment...
+if not exist "venv\Scripts\python.exe" (
+    echo  [INFO] Creating venv...
+    python -m venv venv
+    if errorlevel 1 (
+        echo  [ERROR] Failed to create venv
+        pause
+        exit /b 1
+    )
+)
+echo  [OK] Virtual environment ready
+
+echo.
+echo  [Step 4/7] Activating virtual environment...
+call venv\Scripts\activate.bat
+echo  [OK] Virtual environment activated
+
+echo.
+echo  [Step 5/7] Checking frontend build...
 if not exist "frontend\dist\index.html" (
     echo  [INFO] Frontend not built, installing dependencies...
     node --version >nul 2>&1
@@ -81,7 +99,7 @@ if not exist "frontend\dist\index.html" (
 )
 
 echo.
-echo  [Step 4/6] Checking dependencies...
+echo  [Step 6/7] Installing dependencies with Aliyun mirror...
 python -c "import fastapi" >nul 2>&1
 if errorlevel 1 (
     echo  [INFO] Installing dependencies from Aliyun mirror...
@@ -97,23 +115,7 @@ if errorlevel 1 (
 echo  [OK] Dependencies ready
 
 echo.
-echo  [Step 5/6] Checking OpenClaw Gateway...
-where openclaw >nul 2>&1
-if errorlevel 1 (
-    echo  [WARN] OpenClaw not found
-    echo  Please install OpenClaw: https://github.com/andrewray/openclaw
-    echo.
-    echo  Continue anyway? (Y/N)
-    set /p choice=
-    if /i not "!choice!"=="Y" (
-        exit /b 0
-    )
-) else (
-    echo  [OK] OpenClaw detected
-)
-
-echo.
-echo  [Step 6/6] Starting service...
+echo  [Step 7/7] Starting service...
 
 if not exist "backend\start.py" (
     echo  [ERROR] backend\start.py not found
