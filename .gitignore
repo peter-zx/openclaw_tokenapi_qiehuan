@@ -17,8 +17,8 @@ env/
 
 # Build
 backend/__pycache__/
-frontend/dist/
 frontend/node_modules/
+# frontend/dist/ - Included for out-of-box experience
 
 # OS
 .DS_Store
