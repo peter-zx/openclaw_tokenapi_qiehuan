@@ -75,6 +75,32 @@
 
             </div>
 
+            <!-- 模型ID输入区 -->
+            <div class="model-input-section" v-if="selectedProvider">
+              <div class="selected-provider-info">
+                已选择: <strong>{{ currentProviderName }}</strong>
+                <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
+                <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
+              </div>
+              <el-input
+                v-model="modelIdInput"
+                placeholder="输入模型ID，例如: deepseek-v3"
+                size="large"
+              />
+              <div class="button-group">
+                <el-button
+                  type="success"
+                  @click="handleSave"
+                  :loading="saving"
+                  size="large"
+                  :disabled="!canSave"
+                >
+                  {{ saving ? '保存中...' : '保存到通讯录' }}
+                </el-button>
+              </div>
+              <div v-if="saving" class="loading-tip">正在保存到通讯录...</div>
+            </div>
+
             <!-- 运维指令 -->
             <div class="restart-guide">
               <div class="section-title">OpenClaw 运维指令</div>
@@ -137,7 +163,7 @@
                 </el-button>
               </div>
               <div class="tip-box">
-                <span class="tip-text">💡 提示：修改配置文件后，点击刷新按钮同步最新数据。切换模型后 OpenClaw 会自动重启。</span>
+                <span class="tip-text">💡 提示：修改配置文件后点击刷新同步；点击卡片切换模型，OpenClaw 会自动重启。</span>
               </div>
             </div>
 
@@ -193,6 +219,7 @@ const qrcodeImage = '/qrcode.jpg'
 const API_BASE = 'http://127.0.0.1:9131/api'
 
 const selectedProvider = ref('')
+const modelIdInput = ref('')
 const currentModel = ref('未设置')
 const modelCards = ref([])
 const loading = ref(false)
@@ -238,6 +265,41 @@ const saveProviderConfigToStorage = (key, config) => {
   localStorage.setItem(PROVIDER_CONFIG_KEY, JSON.stringify(configs))
 }
 
+const currentProviderName = computed(() => {
+  if (!selectedProvider.value) return ''
+  if (selectedProvider.value === 'custom') return getStoredProviderConfig('custom').providerId || '自定义'
+  return PRESET_PROVIDERS[selectedProvider.value]?.name || '未知'
+})
+
+const isProviderConfigured = () => {
+  const config = getStoredProviderConfig(selectedProvider.value)
+  return !!config.apiKey
+}
+
+const canSave = computed(() => {
+  if (!selectedProvider.value || !modelIdInput.value) return false
+  return isProviderConfigured()
+})
+
+const handleSave = async () => {
+  if (!canSave.value || !modelIdInput.value) { ElMessage.warning('请选择提供商并填写模型ID'); return }
+  saving.value = true
+  try {
+    const config = getStoredProviderConfig(selectedProvider.value)
+    const response = await axios.post(`${API_BASE}/save`, {
+      providerId: config.providerId,
+      baseUrl: config.baseUrl,
+      apiKey: config.apiKey,
+      modelId: modelIdInput.value,
+      contextWindow: config.contextWindow,
+      maxTokens: config.maxTokens
+    })
+    ElMessage.success(response.data.message)
+    modelIdInput.value = ''
+    await loadConfig()
+  } catch (error) { ElMessage.error('保存失败: ' + (error.response?.data?.detail || error.message)) }
+  finally { saving.value = false }
+}
 
 
 const currentConfigProviderName = computed(() => {
@@ -257,8 +319,8 @@ const filteredCards = computed(() => {
   })
 })
 
-const handleSelectProvider = (key) => { selectedProvider.value = key }
-const handleSelectCustom = () => { selectedProvider.value = 'custom' }
+const handleSelectProvider = (key) => { selectedProvider.value = key; modelIdInput.value = '' }
+const handleSelectCustom = () => { selectedProvider.value = 'custom'; modelIdInput.value = '' }
 
 const openProviderConfig = (key) => {
   currentConfigProviderKey.value = key
@@ -416,6 +478,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .provider-name-btn { min-width: 100px; }
 .provider-config-btn { flex-shrink: 0; }
 .custom-row { border-top: 1px dashed #e4e7ed; padding-top: 15px; margin-top: 5px; }
+
+.model-input-section { margin-top: 15px; }
+.selected-provider-info { margin-bottom: 12px; font-size: 14px; color: #606266; }
+.selected-provider-info strong { color: #409eff; }
+.config-hint { margin-left: 8px; font-size: 12px; }
+.config-hint.warning { color: #e6a23c; }
+.button-group { display: flex; gap: 12px; margin-top: 12px; }
+.button-group .el-button { flex: 1; }
+.loading-tip { margin-top: 10px; text-align: center; color: #909399; font-size: 14px; animation: pulse 1.5s infinite; }
+.loading-tip.applying { color: #67c23a; font-weight: bold; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 /* 重启服务说明 */
 .restart-guide { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
