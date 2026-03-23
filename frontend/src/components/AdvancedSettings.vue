@@ -37,6 +37,27 @@
               <div class="setting-tip">full：完整权限 &nbsp;|&nbsp; coding：仅编码 &nbsp;|&nbsp; minimal：最小权限</div>
             </div>
           </div>
+          <div class="setting-row">
+            <div class="setting-item">
+              <div class="setting-label">权限询问 <span class="label-key">tools.exec.ask</span></div>
+              <el-radio-group v-model="form.execAsk" class="setting-radios">
+                <el-radio value="allow">allow（直接放行，无需确认）</el-radio>
+                <el-radio value="on-miss">on-miss（未匹配时询问）</el-radio>
+                <el-radio value="deny">deny（直接拒绝）</el-radio>
+              </el-radio-group>
+              <div class="setting-tip">云主机推荐 allow，完全开放无需确认</div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-item">
+              <div class="setting-label">安全模式 <span class="label-key">tools.exec.security</span></div>
+              <el-radio-group v-model="form.execSecurity" class="setting-radios">
+                <el-radio value="denylist">denylist（禁止黑名单，其余全放行）</el-radio>
+                <el-radio value="allowlist">allowlist（只执行白名单）</el-radio>
+              </el-radio-group>
+              <div class="setting-tip">云主机推荐 denylist，完全开放</div>
+            </div>
+          </div>
         </div>
 
         <div class="section">
@@ -123,7 +144,9 @@ const form = ref({
   sandboxMode: 'off',
   compactionMode: 'safeguard',
   toolsProfile: 'full',
-  dmScope: 'per-channel-peer'
+  dmScope: 'per-channel-peer',
+  execAsk: 'allow',
+  execSecurity: 'denylist'
 })
 
 const defaults = {
@@ -131,7 +154,9 @@ const defaults = {
   sandboxMode: 'off',
   compactionMode: 'safeguard',
   toolsProfile: 'full',
-  dmScope: 'per-channel-peer'
+  dmScope: 'per-channel-peer',
+  execAsk: 'allow',
+  execSecurity: 'denylist'
 }
 
 watch(() => props.modelValue, async (val) => {
@@ -155,7 +180,9 @@ const loadSettings = async () => {
       sandboxMode: data.sandboxMode || defaults.sandboxMode,
       compactionMode: data.compactionMode || defaults.compactionMode,
       toolsProfile: data.toolsProfile || defaults.toolsProfile,
-      dmScope: data.dmScope || defaults.dmScope
+      dmScope: data.dmScope || defaults.dmScope,
+      execAsk: data.execAsk || defaults.execAsk,
+      execSecurity: data.execSecurity || defaults.execSecurity
     }
   } catch (e) {
     ElMessage.warning('加载高级设置失败，使用默认值')

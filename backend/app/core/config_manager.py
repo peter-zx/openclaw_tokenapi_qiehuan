@@ -327,6 +327,8 @@ class ConfigManager:
 
         return {
             "execHost": tools.get("exec", {}).get("host", "gateway"),
+            "execAsk": tools.get("exec", {}).get("ask", "allow"),
+            "execSecurity": tools.get("exec", {}).get("security", "denylist"),
             "sandboxMode": agents.get("sandbox", {}).get("mode", "off"),
             "compactionMode": agents.get("compaction", {}).get("mode", "safeguard"),
             "toolsProfile": tools.get("profile", "full"),
@@ -339,6 +341,8 @@ class ConfigManager:
             tools = self.config.setdefault("tools", {})
             exec_conf = tools.setdefault("exec", {})
             exec_conf["host"] = settings.get("execHost", "gateway")
+            exec_conf["ask"] = settings.get("execAsk", "allow")
+            exec_conf["security"] = settings.get("execSecurity", "denylist")
             tools["profile"] = settings.get("toolsProfile", "full")
 
             agents = self.config.setdefault("agents", {})

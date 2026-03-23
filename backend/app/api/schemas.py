@@ -76,7 +76,9 @@ class ControlResponse(BaseModel):
 
 class AdvancedSettingsSchema(BaseModel):
     execHost: str = "gateway"
-    sandboxMode: str = "safeguard"
+    sandboxMode: str = "off"
     compactionMode: str = "safeguard"
     toolsProfile: str = "full"
     dmScope: str = "per-channel-peer"
+    execAsk: str = "allow"
+    execSecurity: str = "denylist"
