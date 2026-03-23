@@ -2,14 +2,14 @@
   <el-dialog
     v-model="visible"
     title="高级设置"
-    width="920px"
+    width="1100px"
     @update:model-value="$emit('update:visible', false)"
   >
     <div class="settings-content" v-loading="loading">
       <template v-if="!loading">
         <div class="settings-grid">
 
-          <div class="setting-card card-wide">
+          <div class="setting-card card-full">
             <div class="card-header">
               <span class="card-icon">🔧</span>
               <div class="card-titles">
@@ -18,26 +18,33 @@
               </div>
             </div>
             <div class="card-body">
-              <div class="field-group">
-                <div class="field-label">权限级别</div>
-                <el-radio-group v-model="form.toolsProfile" class="radio-pills">
-                  <el-radio value="full">full 全开</el-radio>
-                  <el-radio value="coding">coding 编码</el-radio>
-                  <el-radio value="minimal">minimal 最小</el-radio>
-                </el-radio-group>
-              </div>
               <div class="field-row">
-                <div class="field-group flex-1">
-                  <div class="field-label">允许的工具</div>
-                  <el-checkbox v-model="form.allowExec">exec 执行命令</el-checkbox>
-                  <el-checkbox v-model="form.allowBrowser">browser 浏览器</el-checkbox>
-                  <el-checkbox v-model="form.allowWebSearch">web_search 搜索</el-checkbox>
-                  <el-checkbox v-model="form.allowWebFetch">web_fetch 抓取网页</el-checkbox>
+                <div class="field-group">
+                  <div class="field-label">权限级别</div>
+                  <el-radio-group v-model="form.toolsProfile" class="radio-pills">
+                    <el-radio value="full">full 全开</el-radio>
+                    <el-radio value="coding">coding 编码</el-radio>
+                    <el-radio value="minimal">minimal 最小</el-radio>
+                  </el-radio-group>
                 </div>
-                <div class="field-group flex-1">
+              </div>
+              <div class="field-divider"></div>
+              <div class="field-row gap-40">
+                <div class="field-group">
+                  <div class="field-label">允许的工具</div>
+                  <div class="checkbox-grid">
+                    <el-checkbox v-model="form.allowExec">exec 执行命令</el-checkbox>
+                    <el-checkbox v-model="form.allowBrowser">browser 浏览器</el-checkbox>
+                    <el-checkbox v-model="form.allowWebSearch">web_search 搜索</el-checkbox>
+                    <el-checkbox v-model="form.allowWebFetch">web_fetch 抓取网页</el-checkbox>
+                  </div>
+                </div>
+                <div class="field-group">
                   <div class="field-label">禁止的操作</div>
-                  <el-checkbox v-model="form.denyElevated">exec:elevated 提权操作</el-checkbox>
-                  <el-checkbox v-model="form.denyShell">exec:shell 交互shell</el-checkbox>
+                  <div class="checkbox-grid">
+                    <el-checkbox v-model="form.denyElevated">exec:elevated 提权操作</el-checkbox>
+                    <el-checkbox v-model="form.denyShell">exec:shell 交互式shell</el-checkbox>
+                  </div>
                 </div>
               </div>
             </div>
@@ -83,8 +90,8 @@
               <div class="field-group">
                 <div class="field-label">安全模式</div>
                 <el-radio-group v-model="form.execSecurity" class="radio-pills-v">
-                  <el-radio value="denylist">denylist 黑名单</el-radio>
-                  <el-radio value="allowlist">allowlist 白名单</el-radio>
+                  <el-radio value="denylist">denylist 黑名单制</el-radio>
+                  <el-radio value="allowlist">allowlist 白名单制</el-radio>
                 </el-radio-group>
               </div>
             </div>
@@ -268,17 +275,17 @@ const handleSave = async () => {
 
 .settings-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
-.card-wide {
+.card-full {
   grid-column: 1 / -1;
 }
 
 .setting-card {
   background: white;
-  border: 1.5px solid #e8efff;
+  border: 1.5px solid #e4e8f4;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -288,8 +295,8 @@ const handleSave = async () => {
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
-  border-bottom: 1px solid #d8e4ff;
+  background: linear-gradient(135deg, #f5f7ff 0%, #eef1fa 100%);
+  border-bottom: 1px solid #dde3f5;
 }
 
 .card-icon { font-size: 22px; line-height: 1; }
@@ -298,28 +305,30 @@ const handleSave = async () => {
 .card-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
 .card-desc { font-size: 11px; color: #8891a8; }
 
-.card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+.card-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-group { display: flex; flex-direction: column; gap: 8px; }
 
-.field-row { display: flex; gap: 20px; }
-.flex-1 { flex: 1; }
+.field-row { display: flex; gap: 24px; }
+.gap-40 { gap: 40px; }
+
+.field-divider { height: 1px; background: #eef1f8; margin: 2px 0; }
 
 .field-label { font-size: 12px; font-weight: 600; color: #5a6a85; letter-spacing: 0.5px; }
 
-.radio-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
+.radio-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .radio-pills-v { display: flex; flex-direction: column; gap: 6px; }
 
 .radio-pills :deep(.el-radio),
 .radio-pills-v :deep(.el-radio) {
   margin-right: 0;
-  padding: 5px 12px;
-  border: 1.5px solid #dde3f0;
+  padding: 5px 14px;
+  border: 1.5px solid #d8dff0;
   border-radius: 6px;
   font-size: 13px;
   background: white;
@@ -337,10 +346,17 @@ const handleSave = async () => {
   border-color: #409eff;
   background: #ecf5ff;
   color: #409eff;
+  font-weight: 600;
 }
 
 .radio-pills :deep(.el-radio__label),
-.radio-pills-v :deep(.el-radio__label) { font-size: 12.5px; padding-left: 5px; }
+.radio-pills-v :deep(.el-radio__label) { font-size: 13px; padding-left: 6px; }
+
+.checkbox-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 :deep(.el-checkbox) { font-size: 13px; }
 :deep(.el-switch) { --el-switch-on-color: #409eff; }
