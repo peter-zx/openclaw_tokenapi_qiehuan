@@ -33,6 +33,14 @@ class UpdateApiKeyRequest(BaseModel):
     apiKey: str
 
 
+class ProviderConfigRequest(BaseModel):
+    providerId: str
+    baseUrl: str
+    apiKey: str
+    contextWindow: int = 64000
+    maxTokens: int = 8000
+
+
 class GatewayControlRequest(BaseModel):
     action: str = Field(..., description="Action: start, stop, restart")
 

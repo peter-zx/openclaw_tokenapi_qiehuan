@@ -30,3 +30,6 @@ Thumbs.db
 # Temporary
 *.tmp
 *.bak
+
+# Security
+.secure_key

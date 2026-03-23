@@ -2,17 +2,25 @@ from fastapi import APIRouter, HTTPException
 from typing import Optional
 
 from .schemas import (
-    ModelSwitchRequest, GatewayControlRequest, DeleteRequest,
-    ModelCardResponse, ConfigStatus, SwitchResponse, ControlResponse
+    ModelSwitchRequest,
+    GatewayControlRequest,
+    DeleteRequest,
+    ModelCardResponse,
+    ConfigStatus,
+    SwitchResponse,
+    ControlResponse,
+    ProviderConfigRequest,
+    UpdateApiKeyRequest,
 )
-from .schemas import ProviderModel
 from ..core.config_manager import ConfigManager
 from ..core.gateway import GatewayController
+from secure_config import SecureConfig
 
 
 router = APIRouter()
 config_manager = ConfigManager()
 gateway_controller = GatewayController()
+secure_config = SecureConfig()
 
 
 @router.get("/config", response_model=ConfigStatus)
@@ -26,14 +34,14 @@ async def get_config():
             currentModel=current_model or "未设置",
             modelCards=[
                 ModelCardResponse(
-                    id=card['id'],
-                    modelId=card['modelId'],
-                    providerId=card['providerId'],
-                    baseUrl=card['baseUrl'],
-                    isCurrent=card['isCurrent']
+                    id=card["id"],
+                    modelId=card["modelId"],
+                    providerId=card["providerId"],
+                    baseUrl=card["baseUrl"],
+                    isCurrent=card["isCurrent"],
                 )
                 for card in model_cards
-            ]
+            ],
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -42,9 +50,14 @@ async def get_config():
 @router.post("/switch", response_model=SwitchResponse)
 async def switch_model(request: ModelSwitchRequest):
     """切换模型"""
-    print(f"[API] Switch: providerId={request.providerId}, modelId={request.modelId}", flush=True)
+    print(
+        f"[API] Switch: providerId={request.providerId}, modelId={request.modelId}",
+        flush=True,
+    )
     try:
-        switch_success = config_manager.switch_model_only(request.providerId, request.modelId)
+        switch_success = config_manager.switch_model_only(
+            request.providerId, request.modelId
+        )
 
         if not switch_success:
             raise HTTPException(status_code=500, detail="切换模型失败")
@@ -56,7 +69,7 @@ async def switch_model(request: ModelSwitchRequest):
         return SwitchResponse(
             success=success,
             message=f"模型已切换到 {current_model}\n重启服务: {'成功' if success else '失败'}",
-            currentModel=current_model
+            currentModel=current_model,
         )
     except HTTPException:
         raise
@@ -88,7 +101,10 @@ async def control_gateway(request: GatewayControlRequest):
 @router.post("/save", response_model=SwitchResponse)
 async def save_model(request: ModelSwitchRequest):
     """保存模型到通讯录（不切换当前使用，不重启服务）"""
-    print(f"[API] Save: providerId={request.providerId}, modelId={request.modelId}", flush=True)
+    print(
+        f"[API] Save: providerId={request.providerId}, modelId={request.modelId}",
+        flush=True,
+    )
     try:
         save_success = config_manager.save_provider(
             request.providerId,
@@ -96,7 +112,7 @@ async def save_model(request: ModelSwitchRequest):
             request.apiKey,
             request.modelId,
             request.contextWindow,
-            request.maxTokens
+            request.maxTokens,
         )
 
         if not save_success:
@@ -107,7 +123,7 @@ async def save_model(request: ModelSwitchRequest):
         return SwitchResponse(
             success=True,
             message=f"模型已保存到通讯录\n当前使用: {current_model or '未设置'}",
-            currentModel=current_model
+            currentModel=current_model,
         )
     except HTTPException:
         raise
@@ -126,10 +142,31 @@ async def get_providers():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/provider/{provider_id}")
+async def get_provider_config(provider_id: str):
+    """获取单个提供商的配置（从加密存储读取）"""
+    try:
+        config = secure_config.get_provider(provider_id)
+        if config is None:
+            return {
+                "providerId": provider_id,
+                "baseUrl": "",
+                "apiKey": "",
+                "contextWindow": 64000,
+                "maxTokens": 8000,
+            }
+        return {"providerId": provider_id, **config}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/delete", response_model=SwitchResponse)
 async def delete_model(request: DeleteRequest):
     """删除模型或提供商"""
-    print(f"[API] Delete: providerId={request.providerId}, modelId={request.modelId}", flush=True)
+    print(
+        f"[API] Delete: providerId={request.providerId}, modelId={request.modelId}",
+        flush=True,
+    )
     try:
         if request.modelId:
             success = config_manager.delete_model(request.providerId, request.modelId)
@@ -143,11 +180,7 @@ async def delete_model(request: DeleteRequest):
 
         current_model = config_manager.get_current_model()
 
-        return SwitchResponse(
-            success=True,
-            message=msg,
-            currentModel=current_model
-        )
+        return SwitchResponse(success=True, message=msg, currentModel=current_model)
     except HTTPException:
         raise
     except Exception as e:
@@ -156,22 +189,29 @@ async def delete_model(request: DeleteRequest):
 
 
 @router.post("/provider/apikey", response_model=SwitchResponse)
-async def update_provider_apikey(request: ModelSwitchRequest):
-    """更新提供商的 API Key"""
-    print(f"[API] Update API Key: providerId={request.providerId}", flush=True)
+async def update_provider_apikey(request: ProviderConfigRequest):
+    """更新提供商的完整配置（API Key 加密存储）"""
+    print(f"[API] Update Provider Config: providerId={request.providerId}", flush=True)
     try:
-        success = config_manager.update_provider_apikey(request.providerId, request.apiKey)
+        secure_config.save_provider(
+            request.providerId,
+            {
+                "baseUrl": request.baseUrl,
+                "apiKey": request.apiKey,
+                "contextWindow": request.contextWindow,
+                "maxTokens": request.maxTokens,
+            },
+        )
 
-        if not success:
-            raise HTTPException(status_code=500, detail="更新 API Key 失败")
+        config_manager.update_auth_profile(request.providerId, request.apiKey)
 
         return SwitchResponse(
             success=True,
-            message=f"API Key 已保存到 {request.providerId}",
-            currentModel=None
+            message=f"配置已加密保存到 {request.providerId}",
+            currentModel=None,
         )
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[API] Update API Key error: {str(e)}", flush=True)
+        print(f"[API] Update Provider Config error: {str(e)}", flush=True)
         raise HTTPException(status_code=500, detail=str(e))

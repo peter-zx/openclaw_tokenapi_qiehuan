@@ -204,29 +204,9 @@
     </el-container>
 
     <!-- 提供商配置弹窗 -->
-    <el-dialog v-model="showProviderConfig" :title="`配置 ${currentConfigProviderName}`" width="450px">
-      <el-form label-position="top">
-        <el-form-item label="Provider ID">
-          <el-input v-model="providerConfigForm.providerId" placeholder="请输入提供商ID" />
-        </el-form-item>
-        <el-form-item label="Base URL">
-          <el-input v-model="providerConfigForm.baseUrl" placeholder="请输入Base URL" />
-        </el-form-item>
-        <el-form-item label="API Key">
-          <el-input v-model="providerConfigForm.apiKey" type="password" placeholder="请输入API Key" show-password />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showProviderConfig = false">取消</el-button>
-        <el-button type="primary" @click="handleSaveProviderConfig">保存配置</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 提供商设置弹窗 -->
     <SettingsDialog
       v-model:visible="showProviderConfig"
       :provider-key="currentConfigProviderKey"
-      :config="providerConfigForm"
       @save="handleSaveProviderConfig"
     />
 
@@ -315,10 +295,11 @@ const getStoredProviderConfig = (key) => {
 
 const saveProviderConfigToStorage = (key, config) => {
   const configs = getAllStoredConfigs()
+  const preset = PRESET_PROVIDERS[key]
   configs[key] = {
     ...config,
-    providerId: config.providerId || PRESET_PROVIDERS[key]?.providerId || '',
-    baseUrl: config.baseUrl || PRESET_PROVIDERS[key]?.baseUrl || ''
+    providerId: config.providerId || preset?.providerId || '',
+    baseUrl: config.baseUrl || preset?.baseUrl || ''
   }
   localStorage.setItem(PROVIDER_CONFIG_KEY, JSON.stringify(configs))
 }
@@ -360,40 +341,52 @@ const handleSelectCustom = () => { selectedProvider.value = 'custom'; modelIdInp
 const openProviderConfig = (key) => {
   currentConfigProviderKey.value = key
   const stored = getStoredProviderConfig(key)
-  providerConfigForm.providerId = stored.providerId
-  providerConfigForm.baseUrl = stored.baseUrl
-  providerConfigForm.apiKey = stored.apiKey
+  Object.assign(providerConfigForm, stored)
   showProviderConfig.value = true
 }
 
-const handleSaveProviderConfig = async () => {
-  if (!providerConfigForm.providerId || !providerConfigForm.baseUrl || !providerConfigForm.apiKey) {
+const handleSaveProviderConfig = async (formData) => {
+  if (!formData) {
+    ElMessage.warning('请填写完整的配置信息')
+    return
+  }
+  if (!formData.providerId || !formData.baseUrl || !formData.apiKey) {
     ElMessage.warning('请填写完整的配置信息')
     return
   }
 
-  // 保存到 localStorage
-  saveProviderConfigToStorage(currentConfigProviderKey.value, {
-    providerId: providerConfigForm.providerId,
-    baseUrl: providerConfigForm.baseUrl,
-    apiKey: providerConfigForm.apiKey,
-    contextWindow: providerConfigForm.contextWindow,
-    maxTokens: providerConfigForm.maxTokens
+  const key = currentConfigProviderKey.value
+  saveProviderConfigToStorage(key, {
+    providerId: formData.providerId,
+    baseUrl: formData.baseUrl,
+    apiKey: formData.apiKey,
+    contextWindow: formData.contextWindow,
+    maxTokens: formData.maxTokens
   })
 
-  // 同步到后端
+  Object.assign(providerConfigForm, {
+    providerId: formData.providerId,
+    baseUrl: formData.baseUrl,
+    apiKey: formData.apiKey,
+    contextWindow: formData.contextWindow,
+    maxTokens: formData.maxTokens
+  })
+
   try {
     await axios.post(`${API_BASE}/provider/apikey`, {
-      providerId: providerConfigForm.providerId,
-      apiKey: providerConfigForm.apiKey
+      providerId: formData.providerId,
+      baseUrl: formData.baseUrl,
+      apiKey: formData.apiKey,
+      contextWindow: formData.contextWindow || 64000,
+      maxTokens: formData.maxTokens || 8000
     })
+    ElMessage.success('配置已保存到后端')
   } catch (error) {
-    console.error('更新后端 API Key 失败:', error)
-    ElMessage.warning('API Key 已保存到浏览器，但后端更新失败，可能影响模型切换')
+    console.error('更新后端配置失败:', error)
+    ElMessage.warning('配置已保存到浏览器，后端更新失败')
   }
 
   showProviderConfig.value = false
-  ElMessage.success('配置已保存')
 }
 
 const loadConfig = async () => {

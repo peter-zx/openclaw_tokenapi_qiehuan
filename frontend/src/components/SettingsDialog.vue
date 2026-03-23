@@ -50,7 +50,7 @@
 
     <template #footer>
       <el-button @click="$emit('update:visible', false)">取消</el-button>
-      <el-button type="primary" @click="handleSave">保存配置</el-button>
+      <el-button type="primary" @click="handleSave" :disabled="!form.providerId || !form.baseUrl || !form.apiKey">保存配置</el-button>
     </template>
   </el-dialog>
 </template>
@@ -112,8 +112,6 @@ const handleSave = () => {
     return
   }
   emit('save', { ...form.value })
-  handleClose()
-  ElMessage.success('配置已保存')
 }
 </script>
 
