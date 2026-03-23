@@ -81,7 +81,15 @@ class ConfigManager:
                     "baseUrl": base_url or "",
                     "apiKey": "",
                     "api": self._infer_api_type(base_url, provider_id),
-                    "models": [{"id": model_id, "name": model_id}],
+                    "models": [{
+                        "id": model_id,
+                        "name": model_id,
+                        "reasoning": False,
+                        "input": ["text"],
+                        "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+                        "contextWindow": context_window,
+                        "maxTokens": max_tokens,
+                    }],
                 }
             else:
                 provider = providers[provider_id]
