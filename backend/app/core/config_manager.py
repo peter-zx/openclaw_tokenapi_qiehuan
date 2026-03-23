@@ -325,14 +325,26 @@ class ConfigManager:
         agents = self.config.get("agents", {}).get("defaults", {})
         session = self.config.get("session", {})
 
+        exec_conf = tools.get("exec", {})
+        allow_list = tools.get("allow", [])
+        deny_list = tools.get("deny", [])
+
         return {
-            "execHost": tools.get("exec", {}).get("host", "gateway"),
-            "execAsk": tools.get("exec", {}).get("ask", "allow"),
-            "execSecurity": tools.get("exec", {}).get("security", "denylist"),
+            "toolsProfile": tools.get("profile", "full"),
+            "allowExec": "exec" in allow_list,
+            "allowBrowser": "browser" in allow_list,
+            "allowWebSearch": "web_search" in allow_list,
+            "allowWebFetch": "web_fetch" in allow_list,
+            "denyElevated": "exec:elevated" in deny_list,
+            "denyShell": "exec:shell" in deny_list,
+            "execHost": exec_conf.get("host", "gateway"),
+            "execAsk": exec_conf.get("ask", "allow"),
+            "execSecurity": exec_conf.get("security", "denylist"),
             "sandboxMode": agents.get("sandbox", {}).get("mode", "off"),
             "compactionMode": agents.get("compaction", {}).get("mode", "safeguard"),
-            "toolsProfile": tools.get("profile", "full"),
             "dmScope": session.get("dmScope", "per-channel-peer"),
+            "webSearchProvider": tools.get("web", {}).get("search", {}).get("provider", "brave"),
+            "webFetchEnabled": tools.get("web", {}).get("fetch", {}).get("enabled", True),
         }
 
     def update_advanced_settings(self, settings: Dict) -> bool:
@@ -340,10 +352,27 @@ class ConfigManager:
         try:
             tools = self.config.setdefault("tools", {})
             exec_conf = tools.setdefault("exec", {})
+
+            allow_list = []
+            if settings.get("allowExec"): allow_list.append("exec")
+            if settings.get("allowBrowser"): allow_list.append("browser")
+            if settings.get("allowWebSearch"): allow_list.append("web_search")
+            if settings.get("allowWebFetch"): allow_list.append("web_fetch")
+            tools["allow"] = allow_list
+
+            deny_list = []
+            if settings.get("denyElevated"): deny_list.append("exec:elevated")
+            if settings.get("denyShell"): deny_list.append("exec:shell")
+            tools["deny"] = deny_list
+
             exec_conf["host"] = settings.get("execHost", "gateway")
             exec_conf["ask"] = settings.get("execAsk", "allow")
             exec_conf["security"] = settings.get("execSecurity", "denylist")
             tools["profile"] = settings.get("toolsProfile", "full")
+
+            web_conf = tools.setdefault("web", {})
+            web_conf.setdefault("search", {})["provider"] = settings.get("webSearchProvider", "brave")
+            web_conf.setdefault("fetch", {})["enabled"] = settings.get("webFetchEnabled", True)
 
             agents = self.config.setdefault("agents", {})
             agents_defaults = agents.setdefault("defaults", {})

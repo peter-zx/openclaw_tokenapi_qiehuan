@@ -75,10 +75,18 @@ class ControlResponse(BaseModel):
 
 
 class AdvancedSettingsSchema(BaseModel):
-    execHost: str = "gateway"
-    sandboxMode: str = "off"
-    compactionMode: str = "safeguard"
     toolsProfile: str = "full"
-    dmScope: str = "per-channel-peer"
+    allowExec: bool = True
+    allowBrowser: bool = True
+    allowWebSearch: bool = True
+    allowWebFetch: bool = True
+    denyElevated: bool = False
+    denyShell: bool = False
+    execHost: str = "gateway"
     execAsk: str = "allow"
     execSecurity: str = "denylist"
+    sandboxMode: str = "off"
+    compactionMode: str = "safeguard"
+    dmScope: str = "per-channel-peer"
+    webSearchProvider: str = "brave"
+    webFetchEnabled: bool = True
