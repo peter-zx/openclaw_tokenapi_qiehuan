@@ -325,15 +325,38 @@ const handleSave = async () => {
 .radio-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .radio-pills-v { display: flex; flex-direction: column; gap: 6px; }
 
-.radio-pills :deep(.el-radio),
-.radio-pills-v :deep(.el-radio) {
+.radio-pills :deep(.el-radio) {
   margin-right: 0;
-  padding: 5px 14px;
+  padding: 6px 14px;
   border: 1.5px solid #d8dff0;
   border-radius: 6px;
   font-size: 13px;
   background: white;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.radio-pills-v :deep(.el-radio) {
+  margin-right: 0;
+  padding: 6px 14px;
+  border: 1.5px solid #d8dff0;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.radio-pills :deep(.el-radio__label),
+.radio-pills-v :deep(.el-radio__label) {
+  font-size: 13px;
+  padding-left: 6px;
+  white-space: nowrap;
 }
 
 .radio-pills :deep(.el-radio:hover),
@@ -349,9 +372,6 @@ const handleSave = async () => {
   color: #409eff;
   font-weight: 600;
 }
-
-.radio-pills :deep(.el-radio__label),
-.radio-pills-v :deep(.el-radio__label) { font-size: 13px; padding-left: 6px; }
 
 .checkbox-grid {
   display: flex;
