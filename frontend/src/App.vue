@@ -222,6 +222,14 @@
       </template>
     </el-dialog>
 
+    <!-- 提供商设置弹窗 -->
+    <SettingsDialog
+      v-model:visible="showProviderConfig"
+      :provider-key="currentConfigProviderKey"
+      :config="providerConfigForm"
+      @save="handleSaveProviderConfig"
+    />
+
     <!-- 批量导入弹窗 -->
     <el-dialog v-model="showBatchImport" title="批量导入模型" width="500px">
       <div style="margin-bottom: 15px; color: #909399;">
@@ -257,6 +265,7 @@ import { Setting, DocumentAdd } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { PRESET_PROVIDERS } from './stores/provider'
 import ModelCard from './components/ModelCard.vue'
+import SettingsDialog from './components/SettingsDialog.vue'
 const qrcodeImage = '/qrcode.jpg'
 
 const API_BASE = 'http://127.0.0.1:9131/api'
@@ -282,7 +291,7 @@ const filterProvider = ref('')
 // 提供商配置弹窗
 const showProviderConfig = ref(false)
 const currentConfigProviderKey = ref('')
-const providerConfigForm = reactive({ providerId: '', baseUrl: '', apiKey: '' })
+const providerConfigForm = reactive({ providerId: '', baseUrl: '', apiKey: '', contextWindow: 64000, maxTokens: 8000 })
 
 const PROVIDER_CONFIG_KEY = 'openclaw_provider_configs'
 
@@ -292,10 +301,16 @@ const getAllStoredConfigs = () => {
 
 const getStoredProviderConfig = (key) => {
   const configs = getAllStoredConfigs()
-  if (key === 'custom') return configs['custom'] || { providerId: '', baseUrl: '', apiKey: '' }
+  if (key === 'custom') return configs['custom'] || { providerId: '', baseUrl: '', apiKey: '', contextWindow: 64000, maxTokens: 8000 }
   const preset = PRESET_PROVIDERS[key]
-  if (!preset) return { providerId: '', baseUrl: '', apiKey: '' }
-  return { providerId: preset.providerId, baseUrl: preset.baseUrl, apiKey: configs[key]?.apiKey || '' }
+  if (!preset) return { providerId: '', baseUrl: '', apiKey: '', contextWindow: 64000, maxTokens: 8000 }
+  return {
+    providerId: preset.providerId,
+    baseUrl: preset.baseUrl,
+    apiKey: configs[key]?.apiKey || '',
+    contextWindow: configs[key]?.contextWindow || 64000,
+    maxTokens: configs[key]?.maxTokens || 8000
+  }
 }
 
 const saveProviderConfigToStorage = (key, config) => {
@@ -359,7 +374,9 @@ const handleSaveProviderConfig = () => {
   saveProviderConfigToStorage(currentConfigProviderKey.value, {
     providerId: providerConfigForm.providerId,
     baseUrl: providerConfigForm.baseUrl,
-    apiKey: providerConfigForm.apiKey
+    apiKey: providerConfigForm.apiKey,
+    contextWindow: providerConfigForm.contextWindow,
+    maxTokens: providerConfigForm.maxTokens
   })
   showProviderConfig.value = false
   ElMessage.success('提供商配置已保存')
@@ -379,7 +396,12 @@ const handleSave = async () => {
   try {
     const config = getStoredProviderConfig(selectedProvider.value)
     const response = await axios.post(`${API_BASE}/save`, {
-      providerId: config.providerId, baseUrl: config.baseUrl, apiKey: config.apiKey, modelId: modelIdInput.value
+      providerId: config.providerId,
+      baseUrl: config.baseUrl,
+      apiKey: config.apiKey,
+      modelId: modelIdInput.value,
+      contextWindow: config.contextWindow,
+      maxTokens: config.maxTokens
     })
     ElMessage.success(response.data.message)
     modelIdInput.value = ''
@@ -394,7 +416,12 @@ const handleSubmit = async () => {
   try {
     const config = getStoredProviderConfig(selectedProvider.value)
     const response = await axios.post(`${API_BASE}/switch`, {
-      providerId: config.providerId, baseUrl: config.baseUrl, apiKey: config.apiKey, modelId: modelIdInput.value
+      providerId: config.providerId,
+      baseUrl: config.baseUrl,
+      apiKey: config.apiKey,
+      modelId: modelIdInput.value,
+      contextWindow: config.contextWindow,
+      maxTokens: config.maxTokens
     })
     ElMessage.success({ message: '模型已切换，正在重启服务，请等待 8 秒...', duration: 5000 })
     modelIdInput.value = ''
@@ -411,7 +438,12 @@ const handleCardClick = async (card) => {
     const apiKey = storedConfig?.apiKey || ''
 
     const response = await axios.post(`${API_BASE}/switch`, {
-      providerId: card.providerId, baseUrl: card.baseUrl, apiKey: apiKey, modelId: card.modelId
+      providerId: card.providerId,
+      baseUrl: card.baseUrl,
+      apiKey: apiKey,
+      modelId: card.modelId,
+      contextWindow: storedConfig?.contextWindow || 64000,
+      maxTokens: storedConfig?.maxTokens || 8000
     })
     ElMessage.success({ message: '模型已切换，正在重启服务，请等待 8 秒...', duration: 5000 })
     await loadConfig()
@@ -486,7 +518,14 @@ const handleBatchImport = async () => {
   let successCount = 0, failCount = 0
   for (const modelId of modelIds) {
     try {
-      await axios.post(`${API_BASE}/save`, { providerId: config.providerId, baseUrl: config.baseUrl, apiKey: config.apiKey, modelId })
+      await axios.post(`${API_BASE}/save`, {
+        providerId: config.providerId,
+        baseUrl: config.baseUrl,
+        apiKey: config.apiKey,
+        modelId,
+        contextWindow: config.contextWindow,
+        maxTokens: config.maxTokens
+      })
       successCount++
     } catch { failCount++ }
   }

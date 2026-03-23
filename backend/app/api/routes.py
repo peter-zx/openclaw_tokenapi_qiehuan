@@ -5,6 +5,7 @@ from .schemas import (
     ModelSwitchRequest, GatewayControlRequest, DeleteRequest,
     ModelCardResponse, ConfigStatus, SwitchResponse, ControlResponse
 )
+from .schemas import ProviderModel
 from ..core.config_manager import ConfigManager
 from ..core.gateway import GatewayController
 
@@ -93,7 +94,9 @@ async def save_model(request: ModelSwitchRequest):
             request.providerId,
             request.baseUrl,
             request.apiKey,
-            request.modelId
+            request.modelId,
+            request.contextWindow,
+            request.maxTokens
         )
 
         if not save_success:

@@ -24,6 +24,8 @@ class ModelSwitchRequest(BaseModel):
     baseUrl: str
     apiKey: str
     modelId: str
+    contextWindow: int = 64000
+    maxTokens: int = 8000
 
 
 class GatewayControlRequest(BaseModel):

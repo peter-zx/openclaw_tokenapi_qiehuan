@@ -51,7 +51,7 @@ class ConfigManager:
         """获取所有提供商"""
         return self.config.get('models', {}).get('providers', {})
 
-    def save_provider(self, provider_id: str, base_url: str, api_key: str, model_id: str) -> bool:
+    def save_provider(self, provider_id: str, base_url: str, api_key: str, model_id: str, context_window: int = 64000, max_tokens: int = 8000) -> bool:
         """保存提供商配置（同时更新 openclaw.json 和 auth-profiles.json）"""
         try:
             if 'models' not in self.config:
@@ -82,8 +82,8 @@ class ConfigManager:
                         'reasoning': False,
                         'input': ['text'],
                         'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0},
-                        'contextWindow': 64000,
-                        'maxTokens': 8000
+                        'contextWindow': context_window,
+                        'maxTokens': max_tokens
                     })
                     provider['models'] = models
 
