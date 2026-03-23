@@ -10,7 +10,18 @@ from models import ModelSwitchRequest, GatewayControlRequest
 from config_manager import ConfigManager
 from gateway_controller import GatewayController
 
-# 创建 FastAPI 应用
+
+class UpdateApiKeyRequest(BaseModel):
+    providerId: str
+    apiKey: str
+
+
+class ProviderResponse(BaseModel):
+    """提供商响应"""
+    providerId: str
+    baseUrl: str
+    apiKey: str
+    modelId: Optional[str] = None
 app = FastAPI(
     title="OpenClaw 模型切换工具",
     description="WebUI 管理界面",
@@ -32,14 +43,6 @@ gateway_controller = GatewayController()
 
 # 静态文件目录
 frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
-
-
-class ProviderResponse(BaseModel):
-    """提供商响应"""
-    providerId: str
-    baseUrl: str
-    apiKey: str
-    modelId: Optional[str] = None
 
 
 class ModelCardResponse(BaseModel):
@@ -281,8 +284,13 @@ async def delete_model(request: DeleteRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class UpdateApiKeyRequest(BaseModel):
+    providerId: str
+    apiKey: str
+
+
 @app.post("/api/provider/apikey", response_model=SwitchResponse)
-async def update_provider_apikey(request: ModelSwitchRequest):
+async def update_provider_apikey(request: UpdateApiKeyRequest):
     """更新提供商的 API Key"""
     print(f"[API] Update API Key: providerId={request.providerId}", flush=True)
     try:

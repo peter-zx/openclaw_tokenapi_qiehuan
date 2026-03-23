@@ -28,6 +28,11 @@ class ModelSwitchRequest(BaseModel):
     maxTokens: int = 8000
 
 
+class UpdateApiKeyRequest(BaseModel):
+    providerId: str
+    apiKey: str
+
+
 class GatewayControlRequest(BaseModel):
     action: str = Field(..., description="Action: start, stop, restart")
 
