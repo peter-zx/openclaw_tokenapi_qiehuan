@@ -76,35 +76,35 @@
             </div>
 
             <!-- 模型ID输入区 -->
-              <div class="model-input-section" v-if="selectedProvider">
-                <div class="selected-provider-info">
-                  已选择: <strong>{{ currentProviderName }}</strong>
-                  <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
-                  <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
-                </div>
-                <el-input
-                  v-model="modelIdInput"
-                  placeholder="输入模型ID，例如: deepseek-v3"
-                  size="large"
-                />
-                <div class="input-actions">
-                  <el-button
-                    type="success"
-                    @click="handleSave"
-                    :loading="saving"
-                    :disabled="!canSave"
-                  >
-                    {{ saving ? '保存中...' : '保存到通讯录' }}
-                  </el-button>
-                  <el-button
-                    @click="handleOpenBatchImport"
-                    :disabled="!isProviderConfigured()"
-                  >
-                    批量导入
-                  </el-button>
-                </div>
-                <div v-if="saving" class="loading-tip">正在保存到通讯录...</div>
+            <div class="model-input-card" v-if="selectedProvider">
+              <div class="selected-provider-info">
+                已选择: <strong>{{ currentProviderName }}</strong>
+                <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
+                <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
               </div>
+              <el-input
+                v-model="modelIdInput"
+                placeholder="输入模型ID，例如: deepseek-v3"
+                size="large"
+              />
+              <div class="input-actions">
+                <el-button
+                  type="success"
+                  @click="handleSave"
+                  :loading="saving"
+                  :disabled="!canSave"
+                >
+                  {{ saving ? '保存中...' : '保存到通讯录' }}
+                </el-button>
+                <el-button
+                  @click="handleOpenBatchImport"
+                  :disabled="!isProviderConfigured()"
+                >
+                  批量导入
+                </el-button>
+              </div>
+              <div v-if="saving" class="loading-tip">正在保存到通讯录...</div>
+            </div>
 
             <!-- 运维指令 -->
             <div class="restart-guide">
@@ -568,7 +568,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .provider-config-btn { flex-shrink: 0; }
 .custom-row { border-top: 1px dashed #e4e7ed; padding-top: 15px; margin-top: 5px; }
 
-.model-input-section { margin-top: 15px; }
+.model-input-card { margin-top: 15px; background: #f5f7fa; border-radius: 8px; padding: 16px; border: 1px solid #e4e7ed; }
 .selected-provider-info { margin-bottom: 10px; font-size: 14px; color: #606266; }
 .selected-provider-info strong { color: #409eff; }
 .config-hint { margin-left: 8px; font-size: 12px; }

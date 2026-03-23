@@ -62,9 +62,13 @@ if not exist "venv\Scripts\python.exe" (
 echo  [OK] Virtual environment ready
 
 echo.
-echo  [Step 4/7] Activating virtual environment...
+echo  [Step 5/7] Activating virtual environment...
 call venv\Scripts\activate.bat
-echo  [OK] Virtual environment activated
+if errorlevel 1 (
+    echo  [WARN] Failed to activate venv, using system Python
+) else (
+    echo  [OK] Virtual environment activated
+)
 
 echo.
 echo  [Step 5/7] Checking frontend build...
@@ -100,11 +104,11 @@ if not exist "frontend\dist\index.html" (
 
 echo.
 echo  [Step 6/7] Installing dependencies with Aliyun mirror...
-python -c "import fastapi" >nul 2>&1
+call venv\Scripts\python.exe -c "import fastapi" >nul 2>&1
 if errorlevel 1 (
     echo  [INFO] Installing dependencies from Aliyun mirror...
     echo  This may take a few minutes, please wait...
-    python -m pip install -i https://mirrors.aliyun.com/pypi/simple/ fastapi uvicorn pydantic pydantic-settings python-multipart pywin32 psutil
+    call venv\Scripts\python.exe -m pip install -i https://mirrors.aliyun.com/pypi/simple/ fastapi uvicorn pydantic pydantic-settings python-multipart pywin32 psutil cryptography
     if errorlevel 1 (
         echo  [ERROR] Failed to install dependencies
         echo  Please check your network connection or try again
@@ -134,5 +138,5 @@ echo.
 
 start http://127.0.0.1:9131
 
-python backend\start.py
+call venv\Scripts\python.exe backend\start.py
 pause
