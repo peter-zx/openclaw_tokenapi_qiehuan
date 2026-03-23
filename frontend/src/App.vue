@@ -232,6 +232,26 @@
         <el-button type="primary" @click="handleBatchImport" :loading="batchImporting">确认导入</el-button>
       </template>
     </el-dialog>
+
+    <!-- 切换模型提示弹窗 -->
+    <el-dialog
+      v-model="showSwitchTip"
+      title="模型切换成功"
+      width="480px"
+      :close-on-click-modal="true"
+      :show-close="true"
+    >
+      <div class="switch-tip-content">
+        <p class="tip-step">1. 请手动关闭旧的终端运行窗口（黑色或蓝色窗口）</p>
+        <p class="tip-step">2. 复制以下代码：</p>
+        <div class="code-wrapper">
+          <div class="code-block">Get-Process | Where-Object { $_.Name -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 8; openclaw gateway</div>
+          <button class="code-copy-btn" @click="copyRestartCmd">复制</button>
+        </div>
+        <p class="tip-step">3. 打开 PowerShell 粘贴并执行</p>
+        <p class="tip-countdown">窗口将在 <strong>{{ countdown }}</strong> 秒后自动关闭</p>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -254,6 +274,8 @@ const modelCards = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const applying = ref(false)
+const showSwitchTip = ref(false)
+const countdown = ref(5)
 
 // 卡片筛选
 const filterProvider = ref('')
@@ -477,11 +499,10 @@ const loadConfig = async () => {
 const handleCardClick = async (card) => {
   applying.value = true
   try {
-    // 从localStorage获取API Key
     const storedConfig = getStoredProviderConfigByProviderId(card.providerId)
     const apiKey = storedConfig?.apiKey || ''
 
-    const response = await axios.post(`${API_BASE}/switch`, {
+    await axios.post(`${API_BASE}/switch`, {
       providerId: card.providerId,
       baseUrl: card.baseUrl,
       apiKey: apiKey,
@@ -489,7 +510,15 @@ const handleCardClick = async (card) => {
       contextWindow: storedConfig?.contextWindow || 64000,
       maxTokens: storedConfig?.maxTokens || 8000
     })
-    ElMessage.success({ message: '模型已切换，正在重启服务，请等待 8 秒...', duration: 5000 })
+    countdown.value = 5
+    showSwitchTip.value = true
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+        showSwitchTip.value = false
+      }
+    }, 1000)
     await loadConfig()
   } catch (error) { ElMessage.error('切换失败: ' + (error.response?.data?.detail || error.message)) }
   finally { applying.value = false }
@@ -601,4 +630,10 @@ code { background: #f5f7fa; padding: 2px 8px; border-radius: 4px; color: #409eff
 .tip-text { font-size: 12px; color: #e6a23c; line-height: 1.5; }
 .empty-state { text-align: center; padding: 40px 0; }
 .model-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+/* 切换提示弹窗 */
+.switch-tip-content { padding: 10px 0; }
+.tip-step { font-size: 15px; color: #303133; margin: 12px 0; line-height: 1.6; }
+.tip-countdown { font-size: 13px; color: #909399; text-align: center; margin-top: 16px; }
+.tip-countdown strong { color: #409eff; font-size: 18px; }
 </style>
