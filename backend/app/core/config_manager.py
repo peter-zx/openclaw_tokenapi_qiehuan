@@ -170,8 +170,6 @@ class ConfigManager:
         url = (base_url or "").lower()
         if "/v3" in url or "/responses" in url:
             return "openai-responses"
-        if "/v1" in url:
-            return "openai-chat"
         return "openai-completions"
 
     def validate_and_fix(self) -> list:
