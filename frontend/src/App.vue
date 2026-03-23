@@ -76,30 +76,35 @@
             </div>
 
             <!-- 模型ID输入区 -->
-            <div class="model-input-section" v-if="selectedProvider">
-              <div class="selected-provider-info">
-                已选择: <strong>{{ currentProviderName }}</strong>
-                <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
-                <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
-              </div>
-              <el-input
-                v-model="modelIdInput"
-                placeholder="输入模型ID，例如: deepseek-v3"
-                size="large"
-              />
-              <div class="button-group">
-                <el-button
-                  type="success"
-                  @click="handleSave"
-                  :loading="saving"
+              <div class="model-input-section" v-if="selectedProvider">
+                <div class="selected-provider-info">
+                  已选择: <strong>{{ currentProviderName }}</strong>
+                  <span v-if="isProviderConfigured()" class="config-hint">（已配置）</span>
+                  <span v-else class="config-hint warning">（未配置，请点击齿轮按钮）</span>
+                </div>
+                <el-input
+                  v-model="modelIdInput"
+                  placeholder="输入模型ID，例如: deepseek-v3"
                   size="large"
-                  :disabled="!canSave"
-                >
-                  {{ saving ? '保存中...' : '保存到通讯录' }}
-                </el-button>
+                />
+                <div class="input-actions">
+                  <el-button
+                    type="success"
+                    @click="handleSave"
+                    :loading="saving"
+                    :disabled="!canSave"
+                  >
+                    {{ saving ? '保存中...' : '保存到通讯录' }}
+                  </el-button>
+                  <el-button
+                    @click="handleOpenBatchImport"
+                    :disabled="!isProviderConfigured()"
+                  >
+                    批量导入
+                  </el-button>
+                </div>
+                <div v-if="saving" class="loading-tip">正在保存到通讯录...</div>
               </div>
-              <div v-if="saving" class="loading-tip">正在保存到通讯录...</div>
-            </div>
 
             <!-- 运维指令 -->
             <div class="restart-guide">
@@ -203,6 +208,30 @@
     />
 
     <!-- 批量导入弹窗 -->
+    <el-dialog v-model="showBatchImport" title="批量导入模型" width="500px">
+      <div style="margin-bottom: 15px; color: #909399;">
+        当前提供商：{{ currentProviderName }}
+      </div>
+      <el-tabs v-model="batchImportTab">
+        <el-tab-pane label="在线输入" name="input">
+          <el-input type="textarea" v-model="batchInputText" :rows="8" placeholder="每行一个模型ID" />
+        </el-tab-pane>
+        <el-tab-pane label="文件导入" name="file">
+          <el-upload ref="uploadRef" :auto-upload="false" :limit="1" accept=".txt" :on-change="handleFileChange">
+            <template #trigger>
+              <el-button>选择 TXT 文件</el-button>
+            </template>
+          </el-upload>
+        </el-tab-pane>
+        <el-tab-pane label="下载模板" name="template">
+          <el-button @click="downloadTemplate">下载模板文件</el-button>
+        </el-tab-pane>
+      </el-tabs>
+      <template #footer>
+        <el-button @click="showBatchImport = false">取消</el-button>
+        <el-button type="primary" @click="handleBatchImport" :loading="batchImporting">确认导入</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -233,6 +262,14 @@ const filterProvider = ref('')
 const showProviderConfig = ref(false)
 const currentConfigProviderKey = ref('')
 const providerConfigForm = reactive({ providerId: '', baseUrl: '', apiKey: '', contextWindow: 64000, maxTokens: 8000 })
+
+// 批量导入
+const showBatchImport = ref(false)
+const batchImportTab = ref('input')
+const batchInputText = ref('')
+const batchImporting = ref(false)
+const uploadRef = ref(null)
+const selectedFile = ref(null)
 
 const PROVIDER_CONFIG_KEY = 'openclaw_provider_configs'
 
@@ -327,6 +364,58 @@ const openProviderConfig = (key) => {
   const stored = getStoredProviderConfig(key)
   Object.assign(providerConfigForm, stored)
   showProviderConfig.value = true
+}
+
+const handleOpenBatchImport = () => {
+  if (!selectedProvider.value) { ElMessage.warning('请先选择提供商'); return }
+  showBatchImport.value = true
+}
+
+const downloadTemplate = () => {
+  const blob = new Blob([`# 模型ID列表\ndeepseek-v3\ngpt-4o\nqwen-plus`], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = 'model_import_template.txt'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+const handleFileChange = (file) => { selectedFile.value = file.raw }
+
+const handleBatchImport = async () => {
+  let modelIds = []
+  if (batchImportTab.value === 'input') {
+    modelIds = batchInputText.value.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'))
+  } else if (batchImportTab.value === 'file') {
+    if (!selectedFile.value) { ElMessage.warning('请先选择文件'); return }
+    modelIds = await new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => resolve(e.target.result.split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#')))
+      reader.readAsText(selectedFile.value)
+    })
+  }
+  if (modelIds.length === 0) { ElMessage.warning('未检测到有效模型ID'); return }
+  if (!canSave.value) { ElMessage.warning('请先配置提供商'); return }
+  batchImporting.value = true
+  const config = getStoredProviderConfig(selectedProvider.value)
+  let successCount = 0, failCount = 0
+  for (const modelId of modelIds) {
+    try {
+      await axios.post(`${API_BASE}/save`, {
+        providerId: config.providerId,
+        baseUrl: config.baseUrl,
+        apiKey: config.apiKey,
+        modelId,
+        contextWindow: config.contextWindow,
+        maxTokens: config.maxTokens
+      })
+      successCount++
+    } catch { failCount++ }
+  }
+  batchImporting.value = false
+  showBatchImport.value = false
+  batchInputText.value = ''
+  ElMessage.success(`导入完成：成功 ${successCount}，失败 ${failCount}`)
+  await loadConfig()
 }
 
 const handleSaveProviderConfig = async (formData) => {
@@ -480,14 +569,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .custom-row { border-top: 1px dashed #e4e7ed; padding-top: 15px; margin-top: 5px; }
 
 .model-input-section { margin-top: 15px; }
-.selected-provider-info { margin-bottom: 12px; font-size: 14px; color: #606266; }
+.selected-provider-info { margin-bottom: 10px; font-size: 14px; color: #606266; }
 .selected-provider-info strong { color: #409eff; }
 .config-hint { margin-left: 8px; font-size: 12px; }
 .config-hint.warning { color: #e6a23c; }
-.button-group { display: flex; gap: 12px; margin-top: 12px; }
-.button-group .el-button { flex: 1; }
-.loading-tip { margin-top: 10px; text-align: center; color: #909399; font-size: 14px; animation: pulse 1.5s infinite; }
-.loading-tip.applying { color: #67c23a; font-weight: bold; }
+.input-actions { display: flex; gap: 10px; margin-top: 10px; }
+.loading-tip { margin-top: 8px; text-align: center; color: #909399; font-size: 14px; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 /* 重启服务说明 */
